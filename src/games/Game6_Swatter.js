@@ -31,7 +31,7 @@ export class Game6_Swatter extends MiniGame {
                 x: Math.random() * (GameState.canvas.width - 60) + 30,
                 y: -40,
                 size: 50,
-                emoji: Math.random() > 0.5 ? '🪳' : '🦟'
+                emoji: Math.random() > 0.5 ? '🕷️' : '🦟'
             });
             this.g6BugTimer = this.g6SpawnRate;
         }
@@ -86,7 +86,7 @@ export class Game6_Swatter extends MiniGame {
             }
             
             if (!hit) {
-                UI.createPopEffect(x, y, '🩴');
+                UI.createPopEffect(x, y, '👟');
             }
         }
     }

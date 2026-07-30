@@ -34,3 +34,14 @@ This project is a modular arcade platform consisting of 30 canvas-based mini-gam
 3. **HTML HUDs**: The HTML overlays for all HUDs are declared in `index.html`. Modify `index.html` only when altering HUD layout, and use `UI.js` to show/hide them.
 4. **Heebo Font & RTL Support**: The interface is right-to-left (RTL) and uses the 'Heebo' font. Ensure Hebrew strings are formatted correctly and UI elements do not break.
 5. **No Bundlers**: This project does not use Node.js or npm packages. Use native ES Modules only (`import`/`export` with `.js` extensions).
+
+---
+
+## Git Version Control Instructions for Agents
+- **Git Path**: Git is installed at the user-scoped path:
+  `C:\Users\noamn\AppData\Local\Programs\Git\cmd\git.exe`
+- **Command Invocation**: When executing Git commands in PowerShell, always invoke it using its absolute path. For example:
+  `& "C:\Users\noamn\AppData\Local\Programs\Git\cmd\git.exe" status`
+  `& "C:\Users\noamn\AppData\Local\Programs\Git\cmd\git.exe" commit -am "My message"`
+- **Avoid Plain Commands**: Do not invoke plain `git` commands, as the environment variable PATH might not be reloaded in new agent shell sessions.
+
