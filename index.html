@@ -325,10 +325,28 @@
             <div class="text-white font-black text-2xl drop-shadow-md">זמן: <span id="g31-time">60</span>s</div>
         </div>
 
+        <!-- HUD 32: להספיק לאוטובוס -->
+        <div id="hud-game32" class="absolute top-0 left-0 w-full p-4 pl-32 pointer-events-none z-10 hidden flex justify-between items-center bg-gradient-to-b from-green-800/80 to-transparent pt-4 pb-8">
+            <div class="text-white font-black text-2xl drop-shadow-md">מרחק: <span id="g32-dist" class="text-yellow-300">50</span>m</div>
+            <div class="text-white font-black text-2xl drop-shadow-md" id="g32-lives">❤️❤️❤️</div>
+        </div>
+
+        <!-- HUD 33: טסט שנתי -->
+        <div id="hud-game33" class="absolute top-0 left-0 w-full p-4 pl-32 pointer-events-none z-10 hidden flex justify-between items-center bg-gradient-to-b from-gray-800/80 to-transparent pt-4 pb-8">
+            <div class="text-white font-black text-2xl drop-shadow-md" id="g33-status">מבצע בדיקה...</div>
+            <div class="text-white font-black text-2xl drop-shadow-md">זמן: <span id="g33-time">15</span>s</div>
+        </div>
+
+        <!-- HUD 34: הסלקטורית -->
+        <div id="hud-game34" class="absolute top-0 left-0 w-full p-4 pl-32 pointer-events-none z-10 hidden flex justify-between items-center bg-gradient-to-b from-purple-800/80 to-transparent pt-4 pb-8">
+            <div class="text-white font-black text-2xl drop-shadow-md">אושרו: <span id="g34-score" class="text-yellow-300">0</span></div>
+            <div class="text-white font-black text-2xl drop-shadow-md" id="g34-lives">❤️❤️❤️</div>
+        </div>
+
         <!-- מסך פתיחה / לובי -->
         <div id="start-screen" class="absolute inset-0 bg-blue-900/90 backdrop-blur-md flex flex-col justify-start items-center p-6 text-center z-30 overflow-y-auto no-scrollbar">
             <h1 class="text-4xl sm:text-6xl font-black text-white my-6 drop-shadow-lg tracking-tight">ארקייד הבטטה 🍠</h1>
-            <p class="text-blue-200 mb-8 font-bold text-lg">31 משחקי מיני מטורפים!</p>
+            <p class="text-blue-200 mb-8 font-bold text-lg">34 משחקי מיני מטורפים!</p>
             
             <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 w-full max-w-6xl mb-8 pb-10">
                 <button onclick="showDifficultyScreen(1)" class="bg-white/10 p-4 rounded-3xl border-2 border-white/20 hover:bg-white/25 transition transform hover:scale-105 shadow-xl"><div class="text-4xl mb-1">🏠</div><h2 class="text-base font-bold text-white leading-tight">הבית משתגע</h2></button>
@@ -362,6 +380,9 @@
                 <button onclick="showDifficultyScreen(29)" class="bg-green-500/20 p-4 rounded-3xl border-2 border-green-400/50 hover:bg-green-500/30 transition transform hover:scale-105 shadow-xl"><div class="text-4xl mb-1">🦅</div><h2 class="text-base font-bold text-white leading-tight">מתקפת עורבים</h2></button>
                 <button onclick="showDifficultyScreen(30)" class="bg-blue-500/20 p-4 rounded-3xl border-2 border-blue-400/50 hover:bg-blue-500/30 transition transform hover:scale-105 shadow-xl"><div class="text-4xl mb-1">📱</div><h2 class="text-base font-bold text-white leading-tight">שירות לקוחות</h2></button>
                 <button onclick="showDifficultyScreen(31)" class="bg-sky-500/20 p-4 rounded-3xl border-2 border-sky-400/50 hover:bg-sky-500/30 transition transform hover:scale-105 shadow-xl"><div class="text-4xl mb-1">☁️</div><h2 class="text-base font-bold text-white leading-tight">בטטות מן השמיים</h2></button>
+                <button onclick="showDifficultyScreen(32)" class="bg-green-500/20 p-4 rounded-3xl border-2 border-green-400/50 hover:bg-green-500/30 transition transform hover:scale-105 shadow-xl"><div class="text-4xl mb-1">🚌</div><h2 class="text-base font-bold text-white leading-tight">להספיק לאוטובוס</h2></button>
+                <button onclick="showDifficultyScreen(33)" class="bg-gray-500/20 p-4 rounded-3xl border-2 border-gray-400/50 hover:bg-gray-500/30 transition transform hover:scale-105 shadow-xl"><div class="text-4xl mb-1">🚗</div><h2 class="text-base font-bold text-white leading-tight">טסט שנתי</h2></button>
+                <button onclick="showDifficultyScreen(34)" class="bg-purple-500/20 p-4 rounded-3xl border-2 border-purple-400/50 hover:bg-purple-500/30 transition transform hover:scale-105 shadow-xl"><div class="text-4xl mb-1">🚪</div><h2 class="text-base font-bold text-white leading-tight">הסלקטורית</h2></button>
             </div>
         </div>
 
