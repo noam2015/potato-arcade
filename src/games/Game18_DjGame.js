@@ -34,7 +34,7 @@ export class Game18_DjGame extends MiniGame {
             if (targetRange) {
                 this.g18Score++;
                 this.updateUI();
-                UI.createPopEffect((lane * GameState.canvas.width / 3) + GameState.canvas.width / 6, n.y, '✨');
+                UI.createPopEffect((lane * GameState.canvas.width / 3) + GameState.canvas.width / 6, n.y, n.emoji);
                 this.g18Notes.splice(i, 1);
                 hit = true;
                 break;

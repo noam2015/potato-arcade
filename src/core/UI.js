@@ -1,4 +1,5 @@
 import { GameState } from './GameState.js';
+import { SoundService } from '../services/SoundService.js';
 
 export const UI = {
     screens: {},
@@ -28,6 +29,21 @@ export const UI = {
                 this.onStartGameWithDiff(diff);
             }
         };
+
+        // Initialize mute button state
+        const muteBtn = document.getElementById('global-mute-btn');
+        if (muteBtn) {
+            muteBtn.innerHTML = SoundService.isMuted ? '🔇' : '🔊';
+        }
+        window.toggleMute = () => {
+            const muted = SoundService.toggleMute();
+            if (muteBtn) {
+                muteBtn.innerHTML = muted ? '🔇' : '🔊';
+            }
+        };
+
+        // Start lobby music setup
+        SoundService.startLobbyBgm();
 
         // Forward active game button controls to active game instance
         window.selectTool = (t) => this.delegateToGame('selectTool', t);
@@ -64,6 +80,9 @@ export const UI = {
         }
 
         GameState.state = 'START';
+
+        // Start lobby BGM
+        SoundService.startLobbyBgm();
         this.screens.gameOver.classList.add('hidden');
         this.screens.difficulty.classList.add('hidden');
         this.screens.gameOver.style.opacity = '0';
@@ -115,6 +134,15 @@ export const UI = {
         this.screens.goDesc.innerText = desc;
         this.hideAllHUDs();
 
+        // Play end-game audio
+        SoundService.stopBgm();
+        const isVictory = title.includes('🏆') || title.includes('🎉') || title.includes('ניצחון') || title.includes('כל הכבוד') || title.includes('עברת') || title.includes('איזה שרירים') || title.includes('מגיע לך');
+        if (isVictory) {
+            SoundService.playWinMusic();
+        } else {
+            SoundService.playLoseMusic();
+        }
+
         // Slide down controls
         const overlays = ['g8-controls', 'g9-controls', 'g14-controls', 'g17-instruction', 'g20-controls', 'g30-controls'];
         overlays.forEach(id => {
@@ -143,5 +171,6 @@ export const UI = {
 
     createPopEffect(x, y, emoji, color = 'rgba(255,255,255,1)') {
         GameState.visualEffects.push({ x, y, emoji, life: 1.0, vy: -30, color });
+        SoundService.playEmojiSFX(emoji);
     }
 };

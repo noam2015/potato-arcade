@@ -2,6 +2,7 @@ import { GameState } from './GameState.js';
 import { UI } from './UI.js';
 import { Input } from './Input.js';
 import { GameRegistry } from '../games/GameRegistry.js';
+import { SoundService } from '../services/SoundService.js';
 
 export const Engine = {
     init() {
@@ -60,6 +61,10 @@ export const Engine = {
         
         // Show correct HUD overlay
         UI.showHUD(gameNum);
+
+        // Start game BGM and stop lobby BGM
+        SoundService.stopBgm();
+        SoundService.startGameBgm();
 
         // Reset visual effects and switch state
         GameState.visualEffects = [];
