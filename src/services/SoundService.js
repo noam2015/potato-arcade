@@ -370,14 +370,14 @@ export const SoundService = {
     startLobbyBgm() {
         this.init();
         this.bgmType = 'lobby';
-        this.currentBpm = 95;
+        this.currentBpm = 110;
         this.isPlayingBgm = true;
     },
 
     startGameBgm() {
         this.init();
         this.bgmType = 'game';
-        this.currentBpm = 135;
+        this.currentBpm = 150;
         this.isPlayingBgm = true;
     },
 
@@ -414,14 +414,15 @@ export const SoundService = {
         let melodyFreq = 0;
         let playHat = false;
         let playKick = false;
+        let playSnare = false;
         
         if (this.bgmType === 'lobby') {
-            // Lounge minor chord progression: Am7, D7, Gmaj7, Cmaj7
+            // Groovy house bass line with octave bounces
             const bassPattern = [
-                55.0, 0, 55.0, 0,       // A2
-                73.42, 0, 73.42, 73.42, // D3
-                49.0, 0, 49.0, 0,       // G2
-                65.41, 0, 65.41, 0      // C3
+                55.0, 110.0, 55.0, 0,       // A2, A3
+                73.42, 146.83, 73.42, 0,    // D3, D4
+                49.0, 98.0, 49.0, 0,        // G2
+                65.41, 130.81, 65.41, 0     // C3, C4
             ];
             bassFreq = bassPattern[step];
             
@@ -434,15 +435,17 @@ export const SoundService = {
             ];
             melodyFreq = melodyPattern[step];
             
-            if (step % 2 === 0) playHat = true;
-            if (step === 0 || step === 8) playKick = true;
+            // Four-on-the-floor kick, backbeat snare, offbeat hi-hat
+            if (step % 4 === 0) playKick = true;
+            if (step === 4 || step === 12) playSnare = true;
+            if (step % 4 === 2) playHat = true;
         } else if (this.bgmType === 'game') {
-            // High tension driving game beat: Am, F, C, G
+            // Driving techno/arcade bass octaves
             const bassPattern = [
-                55.0, 55.0, 55.0, 55.0,     // A2
-                87.31, 87.31, 87.31, 87.31, // F3
-                65.41, 65.41, 65.41, 65.41, // C3
-                98.00, 98.00, 98.00, 98.00  // G3
+                55.0, 110.0, 55.0, 110.0,     // A2, A3
+                87.31, 174.61, 87.31, 174.61, // F3, F4
+                65.41, 130.81, 65.41, 130.81, // C3, C4
+                98.00, 196.00, 98.00, 196.00  // G3, G4
             ];
             bassFreq = bassPattern[step];
             
@@ -455,14 +458,17 @@ export const SoundService = {
             ];
             melodyFreq = melodyPattern[step];
             
-            if (step % 2 === 1) playHat = true;
+            // Driving techno kick, snappy backbeat snare, double-speed hi-hats
             if (step % 4 === 0) playKick = true;
+            if (step === 4 || step === 12 || step === 14) playSnare = true;
+            if (step % 2 === 1) playHat = true;
         }
         
         if (bassFreq > 0) this.synthBass(bassFreq, time);
         if (melodyFreq > 0) this.synthMelody(melodyFreq, time);
         if (playHat) this.synthHat(time);
         if (playKick) this.synthKick(time);
+        if (playSnare) this.synthSnare(time);
     },
 
     // Synth elements
@@ -539,6 +545,35 @@ export const SoundService = {
         
         osc.start(time);
         osc.stop(time + 0.11);
+    },
+
+    synthSnare(time) {
+        if (!this.ctx) return;
+        const now = time;
+        const bufferSize = this.ctx.sampleRate * 0.05; // 50ms
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            data[i] = Math.random() * 2 - 1;
+        }
+        
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buffer;
+        
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(1500, now);
+        
+        const gainNode = this.ctx.createGain();
+        gainNode.gain.setValueAtTime(0.06, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+        
+        noise.connect(filter);
+        filter.connect(gainNode);
+        gainNode.connect(this.musicGain);
+        
+        noise.start(now);
+        noise.stop(now + 0.05);
     },
 
 
