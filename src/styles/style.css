@@ -1,0 +1,57 @@
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght=400;700;900&display=swap');
+
+body {
+    font-family: 'Heebo', sans-serif;
+    touch-action: none;
+    overflow: hidden;
+    background-color: #1a202c;
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.shake {
+    animation: shake 0.5s;
+    animation-iteration-count: infinite;
+}
+
+@keyframes shake {
+    0% { transform: translate(1px, 1px) rotate(0deg); }
+    10% { transform: translate(-1px, -2px) rotate(-1deg); }
+    20% { transform: translate(-3px, 0px) rotate(1deg); }
+    30% { transform: translate(3px, 2px) rotate(0deg); }
+    40% { transform: translate(1px, -1px) rotate(1deg); }
+    50% { transform: translate(-1px, 2px) rotate(-1deg); }
+    60% { transform: translate(-3px, 1px) rotate(0deg); }
+    70% { transform: translate(3px, 1px) rotate(-1deg); }
+    80% { transform: translate(-1px, -1px) rotate(1deg); }
+    90% { transform: translate(1px, 2px) rotate(0deg); }
+    100% { transform: translate(1px, -2px) rotate(-1deg); }
+}
+
+.tool-btn, .memory-btn { 
+    transition: all 0.2s; 
+}
+
+.tool-btn.selected {
+    transform: scale(1.2) translateY(-10px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+    border-color: #fbbf24;
+    background-color: #fffbeb;
+}
+
+.memory-btn:active { 
+    transform: scale(0.9); 
+}
+
+.no-scrollbar::-webkit-scrollbar { 
+    display: none; 
+}
+
+.no-scrollbar { 
+    -ms-overflow-style: none; 
+    scrollbar-width: none; 
+}
