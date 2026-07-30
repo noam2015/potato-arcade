@@ -28,6 +28,7 @@ import { Game27_TrafficGame } from './Game27_TrafficGame.js';
 import { Game28_KetchupGame } from './Game28_KetchupGame.js';
 import { Game29_CrowsGame } from './Game29_CrowsGame.js';
 import { Game30_PhoneGame } from './Game30_PhoneGame.js';
+import { Game31_SkyCatchGame } from './Game31_SkyCatchGame.js';
 
 export const GameRegistry = {
     1: Game1_Repair,
@@ -59,5 +60,6 @@ export const GameRegistry = {
     27: Game27_TrafficGame,
     28: Game28_KetchupGame,
     29: Game29_CrowsGame,
-    30: Game30_PhoneGame
+    30: Game30_PhoneGame,
+    31: Game31_SkyCatchGame
 };
