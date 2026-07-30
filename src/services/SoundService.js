@@ -25,7 +25,7 @@ export const SoundService = {
         
         this.masterGain = this.ctx.createGain();
         this.masterGain.connect(this.ctx.destination);
-        this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : 0.6, this.ctx.currentTime);
+        this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : 0.8, this.ctx.currentTime);
         
         this.sfxGain = this.ctx.createGain();
         this.sfxGain.connect(this.masterGain);
@@ -33,7 +33,7 @@ export const SoundService = {
         
         this.musicGain = this.ctx.createGain();
         this.musicGain.connect(this.masterGain);
-        this.musicGain.gain.value = 0.35;
+        this.musicGain.gain.value = 0.8;
         
         this.nextNoteTime = this.ctx.currentTime;
         this.startScheduler();
@@ -53,7 +53,7 @@ export const SoundService = {
         localStorage.setItem('potato_arcade_muted', this.isMuted ? 'true' : 'false');
         
         if (this.ctx) {
-            this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : 0.6, this.ctx.currentTime);
+            this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : 0.8, this.ctx.currentTime);
         }
         return this.isMuted;
     },
