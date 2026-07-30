@@ -40,8 +40,12 @@ export class Game13_AirplaneGame extends MiniGame {
 
         // Guide plane to target
         if (this.g13Target.active) {
-            let dx = this.g13Target.x - this.g13Player.x;
-            let dy = this.g13Target.y - this.g13Player.y;
+            const halfSize = this.g13Player.size / 2;
+            const clampedTargetX = Math.max(halfSize, Math.min(GameState.canvas.width - halfSize, this.g13Target.x));
+            const clampedTargetY = Math.max(halfSize, Math.min(GameState.canvas.height - halfSize, this.g13Target.y));
+
+            let dx = clampedTargetX - this.g13Player.x;
+            let dy = clampedTargetY - this.g13Player.y;
             let dist = Math.hypot(dx, dy);
             let speed = 800;
             
