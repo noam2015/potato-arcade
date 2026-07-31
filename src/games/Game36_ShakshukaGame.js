@@ -13,12 +13,18 @@ export class Game36_ShakshukaGame extends MiniGame {
 
         // Stage: 1 = Paprika, 2 = Salt, 3 = Eggs
         this.stage = 1;
+        this.shakshukasCooked = 0; // 0 = first, 1 = second (harder)
         this.needleTime = 0;
         this.isStopped = false;
         this.stopTimer = 0;
         this.isWin = false;
         this.isFail = false;
         this.failReason = '';
+
+        // Ingredient visual flags
+        this.hasPaprika = false;
+        this.hasSalt = false;
+        this.hasEggs = false;
 
         // Animation states
         this.bubbles = [];
@@ -49,6 +55,9 @@ export class Game36_ShakshukaGame extends MiniGame {
             this.greenZoneWidth = 26;
         }
 
+        this.baseNeedleSpeed = this.needleSpeed;
+        this.baseGreenZoneWidth = this.greenZoneWidth;
+
         this.updateUI();
     }
 
@@ -60,10 +69,11 @@ export class Game36_ShakshukaGame extends MiniGame {
         const statusEl = document.getElementById('g36-status');
         const livesEl = document.getElementById('g36-lives');
         
+        let prefix = this.shakshukasCooked === 1 ? '🔥 חריף אש - ' : '';
         let labelText = '';
-        if (this.stage === 1) labelText = '🌶️ שלב 1: הוספת פפריקה';
-        else if (this.stage === 2) labelText = '🧂 שלב 2: הוספת מלח';
-        else if (this.stage === 3) labelText = '🥚 שלב 3: הוספת ביצים';
+        if (this.stage === 1) labelText = prefix + '🌶️ שלב 1: הוספת פפריקה';
+        else if (this.stage === 2) labelText = prefix + '🧂 שלב 2: הוספת מלח';
+        else if (this.stage === 3) labelText = prefix + '🥚 שלב 3: הוספת ביצים';
 
         if (statusEl) statusEl.innerText = labelText;
         if (livesEl) livesEl.innerText = '❤️'.repeat(Math.max(0, this.lives));
@@ -82,6 +92,11 @@ export class Game36_ShakshukaGame extends MiniGame {
 
         if (isSuccess) {
             UI.createPopEffect(centerX + needleOffset, 120, '✨ מעולה!', '#4ade80');
+            
+            // Set ingredient visibility
+            if (this.stage === 1) this.hasPaprika = true;
+            else if (this.stage === 2) this.hasSalt = true;
+            else if (this.stage === 3) this.hasEggs = true;
         } else {
             this.isFail = true;
             this.lives = 0;
@@ -150,8 +165,35 @@ export class Game36_ShakshukaGame extends MiniGame {
                 this.isStopped = false;
                 this.stage++;
                 this.time = 15; // Reset timer for next stage
+                
                 if (this.stage > 3) {
-                    UI.endGame("שקשוקה מושלמת! 🍳🏆", "תיבלת את השקשוקה במינון מופלא של אלופים!");
+                    if (this.shakshukasCooked === 0) {
+                        // First shakshuka done! Move to second, harder shakshuka
+                        this.shakshukasCooked = 1;
+                        this.stage = 1;
+                        this.time = 15;
+                        this.isStopped = false;
+
+                        // Clear visual ingredients for new pan
+                        this.hasPaprika = false;
+                        this.hasSalt = false;
+                        this.hasEggs = false;
+
+                        // Upgrade difficulty metrics
+                        this.needleSpeed = this.baseNeedleSpeed * 1.45; // 45% faster needle
+                        this.greenZoneWidth = this.baseGreenZoneWidth * 0.68; // ~30% narrower safe zone
+
+                        // Visual transition cues
+                        UI.screens.container.classList.add('bg-green-100');
+                        setTimeout(() => UI.screens.container.classList.remove('bg-green-100'), 150);
+                        
+                        const canvasW = GameState.canvas.width;
+                        UI.createPopEffect(canvasW / 2, 120, 'שקשוקה קלאסית מוכנה! עכשיו חריף אש... 🍳🔥', '#fbbf24');
+                        this.updateUI();
+                    } else {
+                        // Both shakshukas completed
+                        UI.endGame("מאסטר שקשוקה! 🍳🏆", "תיבלת את שתי השקשוקות בהצלחה מוחצת, כולל הגרסה החריפה!");
+                    }
                 } else {
                     this.updateUI();
                 }
@@ -236,28 +278,27 @@ export class Game36_ShakshukaGame extends MiniGame {
 
         // 3. Draw added ingredients based on completed stages
         // Draw Paprika (red dots)
-        if (this.stage > 1 || (this.isStopped && this.stage === 1 && !this.isFail)) {
+        if (this.hasPaprika) {
             ctx.fillStyle = '#ef4444';
             for (let i = 0; i < 40; i++) {
-                let rx = panX + (Math.random() * 120 - 60);
-                let ry = panY + (Math.random() * 120 - 60);
+                let rx = panX + (Math.sin(i * 3) * 60);
+                let ry = panY + (Math.cos(i * 5) * 60);
                 ctx.fillRect(rx, ry, 3, 3);
             }
         }
 
         // Draw Salt (white dots)
-        if (this.stage > 2 || (this.isStopped && this.stage === 2 && !this.isFail)) {
+        if (this.hasSalt) {
             ctx.fillStyle = '#ffffff';
             for (let i = 0; i < 40; i++) {
-                let rx = panX + (Math.random() * 120 - 60);
-                let ry = panY + (Math.random() * 120 - 60);
+                let rx = panX + (Math.sin(i * 7) * 70);
+                let ry = panY + (Math.cos(i * 11) * 70);
                 ctx.fillRect(rx, ry, 3, 3);
             }
         }
 
         // Draw Eggs
-        if (this.stage > 3 || (this.isStopped && this.stage === 3 && !this.isFail)) {
-            // Draw 2 fried eggs on shakshuka
+        if (this.hasEggs) {
             let eggPos = [{ x: -30, y: -20 }, { x: 30, y: 15 }];
             eggPos.forEach(pos => {
                 // Egg white
@@ -280,7 +321,7 @@ export class Game36_ShakshukaGame extends MiniGame {
                 // Draw flames rising from the pan
                 ctx.fillStyle = '#f97316'; // orange
                 for (let i = 0; i < 8; i++) {
-                    let fx = panX + (Math.random() * 120 - 60);
+                    let fx = panX + (Math.sin(i * 4) * 60);
                     ctx.beginPath();
                     ctx.moveTo(fx, panY);
                     ctx.quadraticCurveTo(fx - 20, panY - this.flameHeight / 2, fx, panY - this.flameHeight);
@@ -338,13 +379,7 @@ export class Game36_ShakshukaGame extends MiniGame {
         ctx.fillText(activeEmoji, startX - 35, gaugeY);
 
         // Needle position
-        let needleX = centerX;
-        if (!this.isStopped) {
-            needleX += Math.sin(this.needleTime * this.needleSpeed) * 140;
-        } else {
-            // Freeze needle at the stopped location
-            needleX += Math.sin(this.needleTime * this.needleSpeed) * 140;
-        }
+        let needleX = centerX + Math.sin(this.needleTime * this.needleSpeed) * 140;
 
         // Draw needle indicator
         ctx.strokeStyle = '#ef4444'; // Red pointer line

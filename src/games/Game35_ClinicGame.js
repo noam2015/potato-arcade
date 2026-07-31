@@ -15,26 +15,25 @@ export class Game35_ClinicGame extends MiniGame {
         this.spawnTimer = 0.5; // Spawn first guest soon
         this.shakeTimer = 0;
 
-        // Difficulty balancing
+        // Difficulty balancing (Harder configuration)
         if (difficulty === 'easy') {
-            this.spawnRate = 2.0;
-            this.speedMult = 1.0;
-            this.trickChance = 0.0; // No doctors/nurses
+            this.spawnRate = 1.6;
+            this.speedMult = 1.25;
+            this.trickChance = 0.0;
         } else if (difficulty === 'medium') {
-            this.spawnRate = 1.3;
-            this.speedMult = 1.35;
-            this.trickChance = 0.25; // 25% chance of tricks
+            this.spawnRate = 1.0;
+            this.speedMult = 1.65;
+            this.trickChance = 0.28;
         } else {
-            this.spawnRate = 0.85;
-            this.speedMult = 1.7;
-            this.trickChance = 0.4;
+            this.spawnRate = 0.65;
+            this.speedMult = 2.15;
+            this.trickChance = 0.42;
         }
 
         this.updateUI();
     }
 
     resize(w, h) {
-        // Handle coordinates scale if needed
     }
 
     updateUI() {
@@ -67,13 +66,14 @@ export class Game35_ClinicGame extends MiniGame {
             entity = {
                 x: -50,
                 y: canvasH / 2 + 50 + (Math.random() * 40 - 20),
-                vx: (Math.random() * 80 + 80) * this.speedMult,
+                // Walk at similar speed to cutters to make it tricky!
+                vx: (Math.random() * 90 + 90) * this.speedMult,
                 emoji: emoji,
                 size: 50,
                 isCutter: false,
                 name: name,
                 clicksRequired: 1,
-                state: 'WALKING' // 'WALKING', 'BLOCKED', 'DODGED'
+                state: 'WALKING'
             };
         } else {
             // Line cutter to BLOCK
@@ -84,9 +84,9 @@ export class Game35_ClinicGame extends MiniGame {
             let size = 48;
 
             if (rand < 0.33) {
-                emoji = '🍆'; // Eggplant (tanky, 2 clicks)
+                emoji = '🍆'; // Eggplant (tanky, 2 or 3 clicks)
                 vx = (Math.random() * 60 + 50) * this.speedMult;
-                clicks = this.difficulty === 'easy' ? 1 : 2;
+                clicks = this.difficulty === 'easy' ? 1 : (this.difficulty === 'medium' ? 2 : 3);
                 size = 55;
             } else if (rand < 0.66) {
                 emoji = '🍅'; // Tomato (normal)

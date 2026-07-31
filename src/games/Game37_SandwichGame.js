@@ -43,6 +43,10 @@ export class Game37_SandwichGame extends MiniGame {
         this.finalBreadY = -100;
         this.finalBreadX = 400;
 
+        // Progressive logic: Two sandwiches
+        this.sandwichesMade = 0; // 0 = first sandwich (8 layers), 1 = second (10 layers)
+        this.targetHeight = 8;
+
         // Difficulty variables
         if (difficulty === 'easy') {
             this.fallSpeedRange = { min: 140, max: 200 };
@@ -61,6 +65,12 @@ export class Game37_SandwichGame extends MiniGame {
             this.swayFactor = 2.0; // heavy sway!
         }
 
+        // Store base variables for progressive shift
+        this.baseFallSpeedRange = { min: this.fallSpeedRange.min, max: this.fallSpeedRange.max };
+        this.baseSpawnRate = this.spawnRate;
+        this.baseBadChance = this.badChance;
+        this.baseSwayFactor = this.swayFactor;
+
         this.updateUI();
     }
 
@@ -73,7 +83,13 @@ export class Game37_SandwichGame extends MiniGame {
     updateUI() {
         const scoreEl = document.getElementById('g37-score');
         const livesEl = document.getElementById('g37-lives');
-        if (scoreEl) scoreEl.innerText = this.stackedItems.length;
+        
+        let labelText = `שכבות: ${this.stackedItems.length} / ${this.targetHeight}`;
+        if (this.sandwichesMade === 1) {
+            labelText = `🔥 קומה כפולה: ${this.stackedItems.length} / ${this.targetHeight}`;
+        }
+        
+        if (scoreEl) scoreEl.innerText = labelText;
         if (livesEl) livesEl.innerText = '❤️'.repeat(Math.max(0, this.lives));
     }
 
@@ -99,14 +115,14 @@ export class Game37_SandwichGame extends MiniGame {
         // Interpolate player X position (smooth dragging)
         this.player.x += (this.player.targetX - this.player.x) * 0.3;
 
-        // Spawning logic (Only spawn ingredients if we have less than 8 stacked items)
-        if (this.stackedItems.length < 8 && !this.finalBreadActive) {
+        // Spawning logic (Only spawn ingredients if we have less than target stacked items)
+        if (this.stackedItems.length < this.targetHeight && !this.finalBreadActive) {
             this.spawnTimer -= dt / 1000;
             if (this.spawnTimer <= 0) {
                 this.spawnFallingItem();
                 this.spawnTimer = this.spawnRate + Math.random() * 0.5;
             }
-        } else if (this.stackedItems.length >= 8 && !this.finalBreadActive) {
+        } else if (this.stackedItems.length >= this.targetHeight && !this.finalBreadActive) {
             // Trigger final top bread drop!
             this.finalBreadActive = true;
             this.finalBreadX = Math.random() * (GameState.canvas.width - 80) + 40;
@@ -187,11 +203,34 @@ export class Game37_SandwichGame extends MiniGame {
             let dy = this.finalBreadY - stackTopY;
 
             if (dx < 50 && dy >= -15 && dy <= 15) {
-                // TOP BREAD CAUGHT! WIN!
-                this.isWin = true;
-                this.finalBreadY = stackTopY - 10;
-                this.finalBreadX = stackTopX;
-                UI.endGame("הסנדוויץ' מוכן! 🥪🎉", `יאמי! הכנת סנדוויץ' של אמא בגובה 8 קומות בשווי ${this.score} נקודות.`);
+                if (this.sandwichesMade === 0) {
+                    // First sandwich done! Move to second, double-decker sandwich
+                    this.sandwichesMade = 1;
+                    this.stackedItems = []; // Reset stack
+                    this.fallingItems = []; // Clear falling items
+                    this.finalBreadActive = false;
+                    this.targetHeight = 10; // 10 layers required for stage 2!
+
+                    // Progressive speed/rate/sway/hazard upgrades
+                    this.fallSpeedRange = { min: this.baseFallSpeedRange.min * 1.35, max: this.baseFallSpeedRange.max * 1.35 };
+                    this.spawnRate = this.baseSpawnRate * 0.65; // 35% faster spawn
+                    this.swayFactor = this.baseSwayFactor * 1.45; // 45% heavier sway!
+                    this.badChance = Math.min(0.8, this.baseBadChance * 1.3);
+
+                    // Transition visual pop
+                    UI.screens.container.classList.add('bg-green-100');
+                    setTimeout(() => UI.screens.container.classList.remove('bg-green-100'), 150);
+
+                    const canvasW = GameState.canvas.width;
+                    UI.createPopEffect(canvasW / 2, canvasH / 2 - 100, 'סנדוויץ׳ ראשון מוכן! עכשיו בונים קומה כפולה... 🥪🔥', '#fbbf24');
+                    this.updateUI();
+                } else {
+                    // Both sandwiches completed! Win!
+                    this.isWin = true;
+                    this.finalBreadY = stackTopY - 10;
+                    this.finalBreadX = stackTopX;
+                    UI.endGame("מאסטר הסנדוויצ'ים! 🥪🏆", `יאמי! הכנת סנדוויץ' קומות כפול מטורף (10 שכבות!) בשווי של ${this.score} נקודות.`);
+                }
             }
 
             // If final bread misses the sandwich and hits bottom, spawn a new one
@@ -205,7 +244,6 @@ export class Game37_SandwichGame extends MiniGame {
     draw(ctx) {
         const canvasW = GameState.canvas.width;
         const canvasH = GameState.canvas.height;
-        const centerX = canvasW / 2;
 
         ctx.save();
 
@@ -268,8 +306,8 @@ export class Game37_SandwichGame extends MiniGame {
 
         // Draw top bread on win
         if (this.isWin) {
-            let sway = Math.sin(performance.now() / 200 + 9 * 0.3) * (9 * this.swayFactor);
-            ctx.fillText('🍞', px + sway, py - 18 - 8 * 18);
+            let sway = Math.sin(performance.now() / 200 + (this.targetHeight + 1) * 0.3) * ((this.targetHeight + 1) * this.swayFactor);
+            ctx.fillText('🍞', px + sway, py - 18 - this.targetHeight * 18);
         }
 
         // 5. Draw Player (Bottom bread slice 🍞)
