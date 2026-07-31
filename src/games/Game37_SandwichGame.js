@@ -13,7 +13,7 @@ const G37_GOOD_ITEMS = [
 
 const G37_BAD_ITEMS = [
     { e: '💩', name: 'poop' }, // Poop requested by user
-    { e: '🪰', name: 'fly' }   // Fly / bug
+    { e: '🧦', name: 'sock' }  // Smelly sock
 ];
 
 export class Game37_SandwichGame extends MiniGame {
@@ -151,8 +151,8 @@ export class Game37_SandwichGame extends MiniGame {
 
             if (dx < 45 && dy >= -15 && dy <= 15) {
                 // Caught!
-                if (item.name === 'poop' || item.name === 'fly') {
-                    // Oops! Caught poop/fly
+                if (item.name === 'poop' || item.name === 'sock') {
+                    // Oops! Caught poop/sock
                     this.lives--;
                     this.updateUI();
 
