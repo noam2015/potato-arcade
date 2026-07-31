@@ -32,6 +32,9 @@ import { Game31_SkyCatchGame } from './Game31_SkyCatchGame.js';
 import { Game32_BusGame } from './Game32_BusGame.js';
 import { Game33_TestGame } from './Game33_TestGame.js';
 import { Game34_SelectorGame } from './Game34_SelectorGame.js';
+import { Game35_ClinicGame } from './Game35_ClinicGame.js';
+import { Game36_ShakshukaGame } from './Game36_ShakshukaGame.js';
+import { Game37_SandwichGame } from './Game37_SandwichGame.js';
 
 export const GameRegistry = {
     1: Game1_Repair,
@@ -67,5 +70,8 @@ export const GameRegistry = {
     31: Game31_SkyCatchGame,
     32: Game32_BusGame,
     33: Game33_TestGame,
-    34: Game34_SelectorGame
+    34: Game34_SelectorGame,
+    35: Game35_ClinicGame,
+    36: Game36_ShakshukaGame,
+    37: Game37_SandwichGame
 };
