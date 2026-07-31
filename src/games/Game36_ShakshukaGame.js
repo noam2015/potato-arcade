@@ -187,7 +187,7 @@ export class Game36_ShakshukaGame extends MiniGame {
                         UI.screens.container.classList.add('bg-green-100');
                         setTimeout(() => UI.screens.container.classList.remove('bg-green-100'), 150);
                         
-                        const canvasW = GameState.canvas.width;
+                        const canvasW = GameState.canvas ? GameState.canvas.width : 800;
                         UI.createPopEffect(canvasW / 2, 120, 'שקשוקה קלאסית מוכנה! עכשיו חריף אש... 🍳🔥', '#fbbf24');
                         this.updateUI();
                     } else {

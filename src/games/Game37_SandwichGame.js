@@ -221,7 +221,8 @@ export class Game37_SandwichGame extends MiniGame {
                     UI.screens.container.classList.add('bg-green-100');
                     setTimeout(() => UI.screens.container.classList.remove('bg-green-100'), 150);
 
-                    const canvasW = GameState.canvas.width;
+                    const canvasW = GameState.canvas ? GameState.canvas.width : 800;
+                    const canvasH = GameState.canvas ? GameState.canvas.height : 600;
                     UI.createPopEffect(canvasW / 2, canvasH / 2 - 100, 'סנדוויץ׳ ראשון מוכן! עכשיו בונים קומה כפולה... 🥪🔥', '#fbbf24');
                     this.updateUI();
                 } else {
