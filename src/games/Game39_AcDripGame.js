@@ -66,10 +66,13 @@ export class Game39_AcDripGame extends MiniGame {
         let rand = Math.random();
         let emoji = '💧';
         let name = 'water';
-        let speed = Math.random() * (this.fallSpeedRange.max - this.fallSpeedRange.min) + this.fallSpeedRange.min;
+        
+        // Progressive speed scaling based on score
+        let speedMult = 1.0 + (this.score * 0.018); // 1.8% faster per point
+        let baseSpeed = Math.random() * (this.fallSpeedRange.max - this.fallSpeedRange.min) + this.fallSpeedRange.min;
+        let speed = baseSpeed * speedMult;
 
         if (rand < this.geckoChance) {
-            // gecko or rust
             if (Math.random() < 0.5) {
                 emoji = '🦎';
                 name = 'gecko';
@@ -82,7 +85,6 @@ export class Game39_AcDripGame extends MiniGame {
             name = 'ice';
         }
 
-        // Spawn position: Drips from the AC unit located in the center top
         // AC width is 240, centered
         let acStartX = canvasW / 2 - 120;
         let spawnX = acStartX + Math.random() * 240;
@@ -105,11 +107,12 @@ export class Game39_AcDripGame extends MiniGame {
         // Wind angle update
         this.windAngle += (dt / 1000) * 2;
 
-        // Spawning
+        // Progressive spawn rate scaling based on score
         this.spawnTimer -= dt / 1000;
         if (this.spawnTimer <= 0) {
             this.spawnDrop();
-            this.spawnTimer = this.spawnRate + Math.random() * 0.4;
+            let currentSpawnRate = Math.max(0.22, this.spawnRate * (1.0 - (this.score * 0.008)));
+            this.spawnTimer = currentSpawnRate + Math.random() * 0.3;
         }
 
         const canvasH = GameState.canvas ? GameState.canvas.height : 600;
@@ -128,9 +131,10 @@ export class Game39_AcDripGame extends MiniGame {
             let drop = this.drops[i];
             drop.y += drop.vy * (dt / 1000);
 
-            // Wind drift (only affects water/ice)
+            // Progressive wind drift based on score
             if (drop.name === 'water' || drop.name === 'ice') {
-                drop.x += Math.sin(this.windAngle + drop.waveOffset) * this.windFactor * 1.5;
+                let windMult = 1.0 + (this.score * 0.012);
+                drop.x += Math.sin(this.windAngle + drop.waveOffset) * (this.windFactor * windMult) * 1.5;
             }
 
             // Check collision with bucket (player)
@@ -143,20 +147,10 @@ export class Game39_AcDripGame extends MiniGame {
                     this.score++;
                     this.updateUI();
                     UI.createPopEffect(drop.x, drop.y, '+1💧', '#3b82f6');
-                    
-                    if (this.score >= 15) {
-                        UI.endGame("החדר יבש! 💧🎉", "הצלחת לאסוף את כל המים ולמנוע הצפה של הסלון!");
-                        return;
-                    }
                 } else if (drop.name === 'ice') {
                     this.score += 2; // bonus!
                     this.updateUI();
                     UI.createPopEffect(drop.x, drop.y, '🧊 בונוס קירור! +2', '#fbbf24');
-                    
-                    if (this.score >= 15) {
-                        UI.endGame("החדר יבש! 💧🎉", "הצלחת לאסוף את כל המים ולמנוע הצפה של הסלון!");
-                        return;
-                    }
                 } else {
                     // gecko or rust caught
                     this.lives--;
@@ -167,7 +161,7 @@ export class Game39_AcDripGame extends MiniGame {
                     setTimeout(() => UI.screens.container.classList.remove('shake'), 200);
 
                     if (this.lives <= 0) {
-                        UI.endGame("הדלי נסדק! 🪣💥", "הדלי התמלא בחלודה ובזוחלים ונשבר.");
+                        UI.endGame("הדלי נסדק! 🪣💥", `הדלי התמלא בחלודה ובזוחלים ונשבר. הצלחת לאסוף ${this.score} טיפות!`);
                         return;
                     }
                 }
@@ -194,7 +188,7 @@ export class Game39_AcDripGame extends MiniGame {
                     setTimeout(() => UI.screens.container.classList.remove('shake'), 150);
 
                     if (this.lives <= 0) {
-                        UI.endGame("הסלון הוצף! 🌊🛋️", "טיפות המזגן הציפו את השטיח היקר בסלון.");
+                        UI.endGame("הסלון הוצף! 🌊🛋️", `טיפות המזגן הציפו את השטיח בסלון. הצלחת לאסוף ${this.score} טיפות!`);
                         return;
                     }
                 }
@@ -330,7 +324,7 @@ export class Game39_AcDripGame extends MiniGame {
 
         // Water level inside bucket
         if (this.score > 0) {
-            let waterHeight = Math.min(ph - 15, 8 + (this.score * 3.2));
+            let waterHeight = Math.min(ph - 15, 8 + (this.score * 1.5));
             ctx.fillStyle = 'rgba(14, 165, 233, 0.85)'; // Water color
             ctx.beginPath();
             ctx.moveTo(px - pw / 2.3, py + ph / 2 - waterHeight);

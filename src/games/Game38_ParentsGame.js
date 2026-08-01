@@ -32,19 +32,19 @@ export class Game38_ParentsGame extends MiniGame {
         this.bubbles = [];
         this.spawnTimer = 0.5;
 
-        // Difficulty variables
+        // Difficulty variables (Increased difficulty)
         if (difficulty === 'easy') {
-            this.spawnRate = 2.2;
-            this.bubbleSpeed = 120;
-            this.goodChance = 0.25;
+            this.spawnRate = 1.3;
+            this.bubbleSpeed = 155;
+            this.goodChance = 0.22;
         } else if (difficulty === 'medium') {
-            this.spawnRate = 1.4;
-            this.bubbleSpeed = 180;
-            this.goodChance = 0.35;
+            this.spawnRate = 0.9;
+            this.bubbleSpeed = 235;
+            this.goodChance = 0.3;
         } else {
-            this.spawnRate = 0.85;
-            this.bubbleSpeed = 260;
-            this.goodChance = 0.45;
+            this.spawnRate = 0.52;
+            this.bubbleSpeed = 330;
+            this.goodChance = 0.42;
         }
 
         this.parentExpression = '🥔'; // neutral
