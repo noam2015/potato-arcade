@@ -366,10 +366,28 @@
             <div class="text-white font-black text-2xl drop-shadow-md" id="g37-lives">❤️❤️❤️</div>
         </div>
 
+        <!-- HUD 38: יום הורים -->
+        <div id="hud-game38" class="absolute top-0 left-0 w-full p-4 pl-32 pointer-events-none z-10 hidden flex justify-between items-center bg-gradient-to-b from-teal-950/80 to-transparent pt-4 pb-8">
+            <div class="text-white font-black text-2xl drop-shadow-md">שרידה: <span id="g38-time" class="text-yellow-300">40</span>s</div>
+            <div class="text-white font-black text-2xl drop-shadow-md" id="g38-lives">❤️❤️❤️</div>
+        </div>
+
+        <!-- HUD 39: המזגן מטפטף! -->
+        <div id="hud-game39" class="absolute top-0 left-0 w-full p-4 pl-32 pointer-events-none z-10 hidden flex justify-between items-center bg-gradient-to-b from-sky-950/80 to-transparent pt-4 pb-8">
+            <div class="text-white font-black text-2xl drop-shadow-md">טיפות: <span id="g39-score" class="text-yellow-300">0</span> / 15</div>
+            <div class="text-white font-black text-2xl drop-shadow-md" id="g39-lives">❤️❤️❤️</div>
+        </div>
+
+        <!-- HUD 40: סוגרים את המרפסת -->
+        <div id="hud-game40" class="absolute top-0 left-0 w-full p-4 pl-32 pointer-events-none z-10 hidden flex justify-between items-center bg-gradient-to-b from-stone-900/80 to-transparent pt-4 pb-8">
+            <div class="text-white font-black text-2xl drop-shadow-md">קיר: <span id="g40-score" class="text-yellow-300">0</span> / 5</div>
+            <div class="text-white font-black text-2xl drop-shadow-md" id="g40-lives">❤️❤️❤️</div>
+        </div>
+
         <!-- מסך פתיחה / לובי -->
         <div id="start-screen" class="absolute inset-0 bg-blue-900/90 backdrop-blur-md flex flex-col justify-start items-center p-6 text-center z-30 overflow-y-auto no-scrollbar">
             <h1 class="text-4xl sm:text-6xl font-black text-white my-6 drop-shadow-lg tracking-tight">ארקייד הבטטה 🍠</h1>
-            <p class="text-blue-200 mb-8 font-bold text-lg">37 משחקי מיני מטורפים!</p>
+            <p class="text-blue-200 mb-8 font-bold text-lg">40 משחקי מיני מטורפים!</p>
             
             <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 w-full max-w-6xl mb-8 pb-10">
                 <button onclick="showDifficultyScreen(1)" class="bg-white/10 p-4 rounded-3xl border-2 border-white/20 hover:bg-white/25 transition transform hover:scale-105 shadow-xl"><div class="text-4xl mb-1">🏠</div><h2 class="text-base font-bold text-white leading-tight">הבית משתגע</h2></button>
@@ -409,6 +427,9 @@
                 <button onclick="showDifficultyScreen(35)" class="bg-teal-500/20 p-4 rounded-3xl border-2 border-teal-400/50 hover:bg-teal-500/30 transition transform hover:scale-105 shadow-xl"><div class="text-4xl mb-1">🏥</div><h2 class="text-base font-bold text-white leading-tight">אני רק שאלה!</h2></button>
                 <button onclick="showDifficultyScreen(36)" class="bg-red-500/20 p-4 rounded-3xl border-2 border-red-400/50 hover:bg-red-500/30 transition transform hover:scale-105 shadow-xl"><div class="text-4xl mb-1">🍳</div><h2 class="text-base font-bold text-white leading-tight">הגזמת עם הפפריקה!</h2></button>
                 <button onclick="showDifficultyScreen(37)" class="bg-amber-500/20 p-4 rounded-3xl border-2 border-amber-400/50 hover:bg-amber-500/30 transition transform hover:scale-105 shadow-xl"><div class="text-4xl mb-1">🥪</div><h2 class="text-base font-bold text-white leading-tight">סנדוויץ' של אמא</h2></button>
+                <button onclick="showDifficultyScreen(38)" class="bg-teal-500/20 p-4 rounded-3xl border-2 border-teal-400/50 hover:bg-teal-500/30 transition transform hover:scale-105 shadow-xl"><div class="text-4xl mb-1">🏫</div><h2 class="text-base font-bold text-white leading-tight">יום הורים</h2></button>
+                <button onclick="showDifficultyScreen(39)" class="bg-sky-500/20 p-4 rounded-3xl border-2 border-sky-400/50 hover:bg-sky-500/30 transition transform hover:scale-105 shadow-xl"><div class="text-4xl mb-1">💧</div><h2 class="text-base font-bold text-white leading-tight">המזגן מטפטף!</h2></button>
+                <button onclick="showDifficultyScreen(40)" class="bg-stone-500/20 p-4 rounded-3xl border-2 border-stone-400/50 hover:bg-stone-500/30 transition transform hover:scale-105 shadow-xl"><div class="text-4xl mb-1">🏗️</div><h2 class="text-base font-bold text-white leading-tight">סוגרים את המרפסת</h2></button>
             </div>
         </div>
 
