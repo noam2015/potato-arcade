@@ -17,7 +17,7 @@ export const UI = {
             huds: [null]
         };
 
-        for (let i = 1; i <= 39; i++) {
+        for (let i = 1; i <= 40; i++) {
             this.screens.huds.push(document.getElementById(`hud-game${i}`));
         }
 
@@ -65,7 +65,7 @@ export const UI = {
     },
 
     hideAllHUDs() {
-        for (let i = 1; i <= 39; i++) {
+        for (let i = 1; i <= 40; i++) {
             if (this.screens.huds[i]) {
                 this.screens.huds[i].classList.add('hidden');
             }

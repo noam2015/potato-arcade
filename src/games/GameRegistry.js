@@ -37,6 +37,7 @@ import { Game36_ShakshukaGame } from './Game36_ShakshukaGame.js';
 import { Game37_SandwichGame } from './Game37_SandwichGame.js';
 import { Game38_ParentsGame } from './Game38_ParentsGame.js';
 import { Game39_AcDripGame } from './Game39_AcDripGame.js';
+import { Game40_LottoGame } from './Game40_LottoGame.js';
 
 export const GameRegistry = {
     1: Game1_Repair,
@@ -77,5 +78,6 @@ export const GameRegistry = {
     36: Game36_ShakshukaGame,
     37: Game37_SandwichGame,
     38: Game38_ParentsGame,
-    39: Game39_AcDripGame
+    39: Game39_AcDripGame,
+    40: Game40_LottoGame
 };
