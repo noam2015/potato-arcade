@@ -3,9 +3,7 @@ import { SoundService } from '../services/SoundService.js';
 import { Leaderboard } from '../services/Leaderboard.js';
 
 const GAMES_METADATA = [
-    { id: 1, name: 'הבית משתגע', emoji: '🏠', category: 'israel' },
     { id: 2, name: 'אמסטרדם', emoji: '🚲', category: 'israel' },
-    { id: 3, name: 'חלבונים', emoji: '💪', category: 'food' },
     { id: 4, name: 'כאפה בזמן', emoji: '🖐️', category: 'action' },
     { id: 5, name: 'יונה עצבנית', emoji: '🐦', category: 'action' },
     { id: 6, name: 'צלף כפכפים', emoji: '👟', category: 'action' },
@@ -221,13 +219,12 @@ export const UI = {
             }
             
             const card = document.createElement('div');
-            card.className = `game-card relative group flex flex-col justify-between items-center p-4 rounded-3xl border-2 hover:scale-105 active:scale-95 transition transform duration-200 cursor-pointer shadow-lg backdrop-blur-md ${colorClasses}`;
+            card.className = `game-card relative group flex flex-col justify-center items-center p-6 rounded-3xl border-2 hover:scale-105 active:scale-95 transition transform duration-200 cursor-pointer shadow-lg backdrop-blur-md min-h-[120px] ${colorClasses}`;
             card.onclick = () => this.showDifficultyScreen(g.id);
             
             card.innerHTML = `
                 <div class="text-4xl mb-2 group-hover:animate-bounce select-none">${g.emoji}</div>
-                <h2 class="text-sm font-black text-white leading-tight text-center mb-2">${g.name}</h2>
-                <div class="text-[10px] font-bold text-white/50 bg-white/5 px-2.5 py-1 rounded-full">${scoreText}</div>
+                <h2 class="text-sm font-black text-white leading-tight text-center">${g.name}</h2>
             `;
             
             grid.appendChild(card);
