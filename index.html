@@ -3,6 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script>
+        window.onerror = function(message, source, lineno, colno, error) {
+            var errMsg = encodeURIComponent(message + ' at ' + source + ':' + lineno + ':' + colno + (error ? '\nStack: ' + error.stack : ''));
+            fetch('/log-error?msg=' + errMsg).catch(function(){});
+            return false;
+        };
+        window.addEventListener('unhandledrejection', function(event) {
+            var errMsg = encodeURIComponent('Unhandled Rejection: ' + event.reason + (event.reason && event.reason.stack ? '\nStack: ' + event.reason.stack : ''));
+            fetch('/log-error?msg=' + errMsg).catch(function(){});
+        });
+    </script>
     <title>ארקייד הבטטה</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -435,23 +446,37 @@
     </div>
 
         <!-- מסך בחירת קושי -->
-        <div id="difficulty-screen" class="absolute inset-0 bg-blue-900/95 backdrop-blur-md flex flex-col justify-center items-center p-6 text-center z-30 hidden">
-            <h2 class="text-4xl font-black text-white mb-8 drop-shadow-lg">בחר רמת קושי</h2>
-            <div class="flex flex-col gap-4 w-full max-w-xs">
-                <button onclick="startGameWithDiff('easy')" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-full text-xl shadow-lg transition transform hover:scale-105">קל</button>
-                <button onclick="startGameWithDiff('medium')" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-6 rounded-full text-xl shadow-lg transition transform hover:scale-105">בינוני</button>
-                <button onclick="startGameWithDiff('hard')" class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-full text-xl shadow-lg transition transform hover:scale-105">קשה</button>
-                <button onclick="goToLobby()" class="mt-4 bg-gray-500 hover:bg-gray-600 border-2 border-white/50 text-white font-bold py-2 px-4 rounded-full text-lg shadow-lg transition">חזור ללובי</button>
+        <div id="difficulty-screen" class="absolute inset-0 bg-[#052028]/70 backdrop-blur-md flex flex-col justify-center items-center p-6 text-center z-30 hidden overflow-hidden">
+            <!-- Synthwave Animated Background -->
+            <div class="synthwave-bg">
+                <div class="synthwave-grid"></div>
+            </div>
+
+            <div class="relative z-10 flex flex-col items-center">
+                <h2 class="text-4xl font-black text-white mb-8 drop-shadow-lg">בחר רמת קושי</h2>
+                <div class="flex flex-col gap-4 w-full max-w-xs">
+                    <button onclick="startGameWithDiff('easy')" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-full text-xl shadow-lg transition transform hover:scale-105">קל</button>
+                    <button onclick="startGameWithDiff('medium')" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-6 rounded-full text-xl shadow-lg transition transform hover:scale-105">בינוני</button>
+                    <button onclick="startGameWithDiff('hard')" class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-full text-xl shadow-lg transition transform hover:scale-105">קשה</button>
+                    <button onclick="goToLobby()" class="mt-4 bg-gray-500 hover:bg-gray-600 border-2 border-white/50 text-white font-bold py-2 px-4 rounded-full text-lg shadow-lg transition">חזור ללובי</button>
+                </div>
             </div>
         </div>
 
         <!-- מסך סיום משחק -->
-        <div id="game-over" class="absolute inset-0 bg-gray-900/90 backdrop-blur-md flex flex-col justify-center items-center p-6 text-center z-30 hidden opacity-0 transition-opacity">
-            <h2 id="go-title" class="text-5xl font-black text-white mb-4"></h2>
-            <p id="go-desc" class="text-xl text-gray-200 mb-8"></p>
-            <div class="flex gap-4">
-                <button id="restart-btn" class="bg-white text-gray-900 font-bold text-xl py-3 px-8 rounded-full shadow-xl hover:scale-105 transition transform">נסה שוב</button>
-                <button onclick="goToLobby()" class="bg-black/30 border-2 border-white/50 text-white font-bold text-xl py-3 px-8 rounded-full shadow-xl hover:bg-black/50 hover:scale-105 transition transform">ללובי</button>
+        <div id="game-over" class="absolute inset-0 bg-[#0b1f28]/75 backdrop-blur-md flex flex-col justify-center items-center p-6 text-center z-30 hidden opacity-0 transition-opacity overflow-hidden">
+            <!-- Synthwave Animated Background -->
+            <div class="synthwave-bg">
+                <div class="synthwave-grid"></div>
+            </div>
+
+            <div class="relative z-10 flex flex-col items-center">
+                <h2 id="go-title" class="text-5xl font-black text-white mb-4"></h2>
+                <p id="go-desc" class="text-xl text-gray-200 mb-8"></p>
+                <div class="flex gap-4">
+                    <button id="restart-btn" class="bg-white text-gray-900 font-bold text-xl py-3 px-8 rounded-full shadow-xl hover:scale-105 transition transform">נסה שוב</button>
+                    <button onclick="goToLobby()" class="bg-black/30 border-2 border-white/50 text-white font-bold text-xl py-3 px-8 rounded-full shadow-xl hover:bg-black/50 hover:scale-105 transition transform">ללובי</button>
+                </div>
             </div>
         </div>
 
