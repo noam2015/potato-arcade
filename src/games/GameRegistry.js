@@ -1,6 +1,4 @@
-import { Game1_Repair } from './Game1_Repair.js';
 import { Game2_Bike } from './Game2_Bike.js';
-import { Game3_Protein } from './Game3_Protein.js';
 import { Game4_Slap } from './Game4_Slap.js';
 import { Game5_Flappy } from './Game5_Flappy.js';
 import { Game6_Swatter } from './Game6_Swatter.js';
@@ -40,9 +38,7 @@ import { Game39_AcDripGame } from './Game39_AcDripGame.js';
 import { Game40_LottoGame } from './Game40_LottoGame.js';
 
 export const GameRegistry = {
-    1: Game1_Repair,
     2: Game2_Bike,
-    3: Game3_Protein,
     4: Game4_Slap,
     5: Game5_Flappy,
     6: Game6_Swatter,
