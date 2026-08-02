@@ -1,40 +1,114 @@
 /**
- * Authentication service stub for Potato Arcade.
- * Ready to integrate with Firebase, Supabase, Auth0, or a custom API server.
+ * Authentication service for Potato Arcade.
+ * Manages users locally using LocalStorage.
  */
 export const Auth = {
     currentUser: null,
 
     /**
-     * Stub for logging in a user.
+     * Initializes the auth session by checking localStorage.
+     */
+    init() {
+        try {
+            const session = localStorage.getItem('potato_arcade_session');
+            if (session) {
+                this.currentUser = {
+                    username: session,
+                    role: "player"
+                };
+            }
+        } catch (e) {
+            console.error("Failed to initialize auth session:", e);
+        }
+    },
+
+    /**
+     * Logs in a user.
      * @param {string} username 
      * @param {string} password 
      * @returns {Promise<Object>} The authenticated user object
      */
     async login(username, password) {
-        console.warn("Auth.login is not implemented yet. Guest mode activated for:", username);
+        const cleanUsername = (username || '').trim();
+        const cleanPassword = (password || '').trim();
+
+        if (!cleanUsername || !cleanPassword) {
+            throw new Error("נא למלא את כל השדות");
+        }
+
+        const users = this._getUsers();
+        const key = cleanUsername.toLowerCase();
+
+        if (!users[key]) {
+            throw new Error("שם המשתמש אינו קיים");
+        }
+
+        if (users[key].password !== cleanPassword) {
+            throw new Error("סיסמה שגויה");
+        }
+
         this.currentUser = {
-            id: "guest_" + Math.random().toString(36).substr(2, 9),
-            username: username,
+            username: users[key].username, // Keep original casing
             role: "player"
         };
+
+        try {
+            localStorage.setItem('potato_arcade_session', this.currentUser.username);
+        } catch (e) {
+            console.error("Failed to save auth session:", e);
+        }
+
         return this.currentUser;
     },
 
     /**
-     * Stub for registering a new user.
+     * Registers a new user.
+     * @param {string} username 
+     * @param {string} email - unused for local storage but kept for API compatibility
+     * @param {string} password 
+     * @returns {Promise<Object>}
      */
     async register(username, email, password) {
-        console.warn("Auth.register is not implemented yet.");
-        return this.login(username, password);
+        const cleanUsername = (username || '').trim();
+        const cleanPassword = (password || '').trim();
+
+        if (!cleanUsername || !cleanPassword) {
+            throw new Error("נא למלא את כל השדות");
+        }
+
+        if (cleanUsername.length < 3) {
+            throw new Error("שם המשתמש חייב להיות לפחות 3 תווים");
+        }
+
+        const users = this._getUsers();
+        const key = cleanUsername.toLowerCase();
+
+        if (users[key]) {
+            throw new Error("שם המשתמש כבר תפוס");
+        }
+
+        // Add user
+        users[key] = {
+            username: cleanUsername,
+            password: cleanPassword,
+            registeredAt: Date.now()
+        };
+
+        this._saveUsers(users);
+
+        return this.login(cleanUsername, cleanPassword);
     },
 
     /**
-     * Stub for logging out the current user.
+     * Logs out the current user.
      */
     async logout() {
-        console.log("Logged out user:", this.currentUser?.username);
         this.currentUser = null;
+        try {
+            localStorage.removeItem('potato_arcade_session');
+        } catch (e) {
+            console.error("Failed to remove auth session:", e);
+        }
     },
 
     /**
@@ -43,5 +117,24 @@ export const Auth = {
      */
     isLoggedIn() {
         return this.currentUser !== null;
+    },
+
+    // --- Private Helper Methods ---
+
+    _getUsers() {
+        try {
+            return JSON.parse(localStorage.getItem('potato_arcade_users') || '{}');
+        } catch (e) {
+            console.error("Failed to read local users:", e);
+            return {};
+        }
+    },
+
+    _saveUsers(users) {
+        try {
+            localStorage.setItem('potato_arcade_users', JSON.stringify(users));
+        } catch (e) {
+            console.error("Failed to write local users:", e);
+        }
     }
 };

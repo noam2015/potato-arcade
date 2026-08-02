@@ -353,6 +353,12 @@
 
         <!-- מסך פתיחה / לובי -->
         <div id="start-screen" class="absolute inset-0 bg-[#0b1f28]/70 z-30 overflow-hidden flex flex-col">
+            <!-- בר משתמש -->
+            <div id="user-bar" class="absolute top-4 left-4 z-40 flex items-center gap-2 sm:gap-3 bg-slate-950/85 border border-white/10 backdrop-blur-md py-1.5 px-3 sm:py-2 sm:px-4 rounded-2xl text-white text-xs sm:text-sm font-bold shadow-2xl">
+                <span id="user-status-text">שלום, אורח 👤</span>
+                <button id="auth-btn" class="bg-cyan-500/20 hover:bg-cyan-500/40 text-cyan-300 border border-cyan-400/30 py-1 px-2.5 rounded-xl transition">כניסה / הרשמה 🔑</button>
+            </div>
+
             <!-- Synthwave Animated Background -->
             <div class="synthwave-bg">
                 <div class="synthwave-grid"></div>
@@ -373,11 +379,16 @@
                             <span class="absolute inset-y-0 right-0 flex items-center pr-4 text-white/50">🔍</span>
                             <input type="text" id="search-input" placeholder="חפש משחק..." class="w-full bg-slate-950/85 border border-white/15 text-white placeholder-white/50 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 focus:outline-none backdrop-blur-md rounded-2xl py-3 pr-10 pl-4 shadow-2xl text-base transition-all">
                         </div>
-                        <!-- CRT Toggle -->
-                        <button id="crt-toggle-btn" class="w-full sm:w-auto bg-slate-950/85 hover:bg-slate-950/95 border border-white/15 text-white backdrop-blur-md py-2.5 px-5 rounded-2xl font-bold shadow-2xl transition transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2">
-                            <span>📺 מסך CRT:</span>
-                            <span id="crt-status-text" class="text-red-400">כבוי</span>
-                        </button>
+                        <!-- CRT Toggle + Leaderboard -->
+                        <div class="flex gap-2 w-full sm:w-auto">
+                            <button id="crt-toggle-btn" class="flex-1 sm:flex-none bg-slate-950/85 hover:bg-slate-950/95 border border-white/15 text-white backdrop-blur-md py-2.5 px-5 rounded-2xl font-bold shadow-2xl transition transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2">
+                                <span>📺 מסך CRT:</span>
+                                <span id="crt-status-text" class="text-red-400">כבוי</span>
+                            </button>
+                            <button id="leaderboard-open-btn" class="flex-1 sm:flex-none bg-yellow-500/20 hover:bg-yellow-500/35 border border-yellow-500/40 text-yellow-300 backdrop-blur-md py-2.5 px-5 rounded-2xl font-bold shadow-2xl transition transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2">
+                                🏆 לוח תוצאות
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Category tabs filter -->
@@ -465,6 +476,90 @@
                 <div class="flex gap-4">
                     <button id="restart-btn" class="bg-white text-gray-900 font-bold text-xl py-3 px-8 rounded-full shadow-xl hover:scale-105 transition transform">נסה שוב</button>
                     <button onclick="goToLobby()" class="bg-black/30 border-2 border-white/50 text-white font-bold text-xl py-3 px-8 rounded-full shadow-xl hover:bg-black/50 hover:scale-105 transition transform">ללובי</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- חלון התחברות/הרשמה -->
+        <div id="auth-modal" class="absolute inset-0 bg-slate-950/85 backdrop-blur-md flex justify-center items-center p-6 z-40 hidden opacity-0 transition-opacity duration-300">
+            <div class="bg-slate-900 border-2 border-cyan-500/50 shadow-[0_0_25px_rgba(6,182,212,0.4)] rounded-3xl p-6 w-full max-w-sm text-right relative flex flex-col gap-4 text-white">
+                <!-- כפתור סגירה -->
+                <button id="auth-close-btn" class="absolute top-4 left-4 text-white/50 hover:text-white text-xl transition">✕</button>
+
+                <h3 class="text-2xl font-black text-center text-cyan-300 mb-2 drop-shadow-md">כניסה לארקייד 🍠</h3>
+
+                <!-- טאבים -->
+                <div class="flex border-b border-white/10 mb-2">
+                    <button id="tab-login" class="flex-1 pb-2 font-bold text-center border-b-2 border-cyan-400 text-white transition focus:outline-none">התחברות</button>
+                    <button id="tab-register" class="flex-1 pb-2 font-bold text-center border-b-2 border-transparent text-white/60 hover:text-white transition focus:outline-none">הרשמה</button>
+                </div>
+
+                <!-- שדות קלט -->
+                <div class="flex flex-col gap-3">
+                    <div>
+                        <label class="block text-xs text-white/60 mb-1">שם משתמש</label>
+                        <input type="text" id="auth-username" placeholder="הכנס שם משתמש..." class="w-full bg-slate-950 border border-white/15 rounded-xl py-2.5 px-3 focus:outline-none focus:border-cyan-500 text-white placeholder-white/30 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-white/60 mb-1">סיסמה</label>
+                        <input type="password" id="auth-password" placeholder="הכנס סיסמה..." class="w-full bg-slate-950 border border-white/15 rounded-xl py-2.5 px-3 focus:outline-none focus:border-cyan-500 text-white placeholder-white/30 text-sm">
+                    </div>
+                </div>
+
+                <!-- שגיאות -->
+                <div id="auth-error-msg" class="text-red-400 text-xs font-bold text-center hidden min-h-[16px]"></div>
+
+                <!-- כפתורי פעולה -->
+                <div class="flex flex-col gap-2 mt-2">
+                    <button id="auth-submit-btn" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2.5 rounded-xl shadow-lg transition">התחבר</button>
+                    <button id="auth-guest-btn" class="bg-white/5 hover:bg-white/10 text-white/70 py-2 rounded-xl text-sm transition">המשך כאורח 👤</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- לוח תוצאות Modal -->
+        <div id="leaderboard-modal" class="absolute inset-0 bg-slate-950/90 backdrop-blur-md flex justify-center items-center p-4 z-40 hidden opacity-0 transition-opacity duration-300">
+            <div class="bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-yellow-500/40 shadow-[0_0_40px_rgba(234,179,8,0.25)] rounded-3xl w-full max-w-sm text-right flex flex-col overflow-hidden" style="max-height:90vh">
+                <!-- Header -->
+                <div class="relative bg-gradient-to-r from-yellow-500/20 to-amber-600/10 border-b border-yellow-500/20 px-6 py-5 flex items-center justify-between">
+                    <h3 class="text-2xl font-black text-white flex items-center gap-2">
+                        🏆 <span class="bg-clip-text text-transparent bg-gradient-to-r from-yellow-300 to-amber-400">לוח תוצאות</span>
+                    </h3>
+                    <button id="lb-close-btn" class="text-white/50 hover:text-white text-2xl transition hover:rotate-90 duration-200">✕</button>
+                </div>
+
+                <!-- Selectors -->
+                <div class="px-6 pt-5 pb-3 flex flex-col gap-3">
+                    <!-- Game selector -->
+                    <div>
+                        <label class="block text-xs text-white/50 mb-1.5 font-bold">משחק</label>
+                        <select id="lb-game-select" class="w-full bg-slate-800 border border-white/10 text-white rounded-xl py-2.5 px-3 focus:outline-none focus:border-yellow-500 text-sm font-bold appearance-none cursor-pointer">
+                            <option value="" disabled>בחר משחק...</option>
+                        </select>
+                    </div>
+
+                    <!-- Difficulty selector -->
+                    <div>
+                        <label class="block text-xs text-white/50 mb-1.5 font-bold">רמת קושי</label>
+                        <select id="lb-diff-select" class="w-full bg-slate-800 border border-white/10 text-white rounded-xl py-2.5 px-3 focus:outline-none focus:border-yellow-500 text-sm font-bold appearance-none cursor-pointer">
+                            <option value="easy">קל 🟢</option>
+                            <option value="medium" selected>בינוני 🟡</option>
+                            <option value="hard">קשה 🔴</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Divider -->
+                <div class="mx-6 border-t border-white/10"></div>
+
+                <!-- Results -->
+                <div id="lb-results" class="flex flex-col gap-3 px-6 py-5 overflow-y-auto no-scrollbar">
+                    <!-- Populated dynamically -->
+                </div>
+
+                <!-- Footer -->
+                <div class="px-6 pb-5 text-center text-white/25 text-xs">
+                    הנתונים נשמרים באופן מקומי &bull; התחבר כדי לשמור שיאים
                 </div>
             </div>
         </div>

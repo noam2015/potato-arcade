@@ -1,6 +1,7 @@
 import { GameState } from './GameState.js';
 import { SoundService } from '../services/SoundService.js';
 import { Leaderboard } from '../services/Leaderboard.js';
+import { Auth } from '../services/Auth.js';
 
 const GAMES_METADATA = [
     { id: 2, name: 'אמסטרדם', emoji: '🚲', category: 'israel' },
@@ -168,6 +169,43 @@ export const UI = {
 
         // Start lobby music setup
         SoundService.startLobbyBgm();
+
+        // Initialize Auth
+        Auth.init();
+
+        // Bind auth handlers
+        const authBtn = document.getElementById('auth-btn');
+        if (authBtn) authBtn.onclick = () => this.handleAuthBarClick();
+
+        const authCloseBtn = document.getElementById('auth-close-btn');
+        if (authCloseBtn) authCloseBtn.onclick = () => this.closeAuthModal();
+
+        const authGuestBtn = document.getElementById('auth-guest-btn');
+        if (authGuestBtn) authGuestBtn.onclick = () => this.closeAuthModal();
+
+        const authSubmitBtn = document.getElementById('auth-submit-btn');
+        if (authSubmitBtn) authSubmitBtn.onclick = () => this.submitAuth();
+
+        const tabLogin = document.getElementById('tab-login');
+        if (tabLogin) tabLogin.onclick = () => this.switchAuthTab('login');
+
+        const tabRegister = document.getElementById('tab-register');
+        if (tabRegister) tabRegister.onclick = () => this.switchAuthTab('register');
+
+        this.activeAuthTab = 'login';
+        this.updateUserBar();
+
+        // Bind leaderboard modal
+        const lbBtn = document.getElementById('leaderboard-open-btn');
+        if (lbBtn) lbBtn.onclick = () => this.openLeaderboardModal();
+
+        const lbCloseBtn = document.getElementById('lb-close-btn');
+        if (lbCloseBtn) lbCloseBtn.onclick = () => this.closeLeaderboardModal();
+
+        const lbGameSel = document.getElementById('lb-game-select');
+        const lbDiffSel = document.getElementById('lb-diff-select');
+        if (lbGameSel) lbGameSel.addEventListener('change', () => this.renderLeaderboardResults());
+        if (lbDiffSel) lbDiffSel.addEventListener('change', () => this.renderLeaderboardResults());
     },
 
     delegateToGame(methodName, ...args) {
@@ -176,15 +214,88 @@ export const UI = {
         }
     },
 
-    getHighScoreSync(gameId) {
+    getHighScoreSync(gameId, difficulty = 'medium') {
         try {
-            const scoresKey = `potato_arcade_scores_game_${gameId}`;
-            const localScores = JSON.parse(localStorage.getItem(scoresKey) || '[]');
+            const key = Leaderboard._key(gameId, difficulty);
+            const localScores = JSON.parse(localStorage.getItem(key) || '[]');
             if (localScores.length > 0) {
                 return localScores[0].score;
             }
         } catch (e) {}
         return null;
+    },
+
+    // ── Leaderboard Modal ────────────────────────────────────────────────
+
+    openLeaderboardModal() {
+        const modal = document.getElementById('leaderboard-modal');
+        if (!modal) return;
+
+        // Populate game selector (only once)
+        const sel = document.getElementById('lb-game-select');
+        if (sel && sel.options.length <= 1) {
+            GAMES_METADATA.forEach(g => {
+                const opt = document.createElement('option');
+                opt.value = g.id;
+                opt.textContent = `${g.emoji} ${g.name}`;
+                sel.appendChild(opt);
+            });
+            // Auto-select the first real game
+            if (sel.options.length > 1) sel.selectedIndex = 1;
+        }
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        setTimeout(() => modal.classList.add('opacity-100'), 30);
+        this.renderLeaderboardResults();
+    },
+
+    closeLeaderboardModal() {
+        const modal = document.getElementById('leaderboard-modal');
+        if (!modal) return;
+        modal.classList.remove('opacity-100');
+        setTimeout(() => {
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+        }, 300);
+    },
+
+    renderLeaderboardResults() {
+        const gameId = parseInt(document.getElementById('lb-game-select')?.value || '2');
+        const diff   = document.getElementById('lb-diff-select')?.value || 'medium';
+        const scores = Leaderboard.getTopScoresSync(gameId, diff, 3);
+
+        const container = document.getElementById('lb-results');
+        if (!container) return;
+
+        const medals = ['🥇', '🥈', '🥉'];
+        const medalColors = [
+            'from-yellow-400/20 to-yellow-600/10 border-yellow-500/50 shadow-yellow-500/20',
+            'from-slate-400/20 to-slate-600/10 border-slate-400/50 shadow-slate-400/20',
+            'from-amber-700/20 to-amber-900/10 border-amber-700/50 shadow-amber-700/20'
+        ];
+        const rankColors = ['text-yellow-300', 'text-slate-300', 'text-amber-500'];
+
+        if (scores.length === 0) {
+            container.innerHTML = `
+                <div class="flex flex-col items-center justify-center py-10 text-white/40">
+                    <div class="text-5xl mb-3">🎮</div>
+                    <p class="text-base font-bold">אין תוצאות עדיין לרמה זו</p>
+                    <p class="text-xs mt-1">שחק ושבור שיאים!</p>
+                </div>`;
+            return;
+        }
+
+        container.innerHTML = scores.map((s, i) => `
+            <div class="flex items-center gap-4 bg-gradient-to-r ${medalColors[i]} border rounded-2xl px-5 py-4 shadow-lg animate-[fadeInUp_0.3s_ease_${i*0.08}s_both]">
+                <div class="text-3xl">${medals[i]}</div>
+                <div class="flex-1 min-w-0">
+                    <p class="font-black text-white text-base truncate">${s.userId || 'שחקן'}</p>
+                    <p class="text-xs text-white/50">${new Date(s.timestamp).toLocaleDateString('he-IL')}</p>
+                </div>
+                <div class="${rankColors[i]} font-black text-2xl">${s.score.toLocaleString()}</div>
+            </div>`
+        ).join('');
     },
 
     renderLobby() {
@@ -382,7 +493,9 @@ export const UI = {
         }
         
         if (isNewRecord) {
-            Leaderboard.submitScore(gameNum, score, 'שחקן 1');
+            const username = Auth.currentUser ? Auth.currentUser.username : 'אורח';
+            const difficulty = GameState.currentDifficulty || 'medium';
+            Leaderboard.submitScore(gameNum, score, username, difficulty);
         }
 
         // Update record banner
@@ -505,5 +618,119 @@ export const UI = {
     createPopEffect(x, y, emoji, color = 'rgba(255,255,255,1)') {
         GameState.visualEffects.push({ x, y, emoji, life: 1.0, vy: -30, color });
         SoundService.playEmojiSFX(emoji);
+    },
+
+    openAuthModal() {
+        const modal = document.getElementById('auth-modal');
+        if (!modal) return;
+        
+        // Reset fields and errors
+        document.getElementById('auth-username').value = '';
+        document.getElementById('auth-password').value = '';
+        const errMsg = document.getElementById('auth-error-msg');
+        if (errMsg) {
+            errMsg.innerText = '';
+            errMsg.classList.add('hidden');
+        }
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        setTimeout(() => modal.classList.add('opacity-100'), 50);
+        this.switchAuthTab('login');
+    },
+
+    closeAuthModal() {
+        const modal = document.getElementById('auth-modal');
+        if (!modal) return;
+
+        modal.classList.remove('opacity-100');
+        setTimeout(() => {
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+        }, 300);
+    },
+
+    switchAuthTab(tab) {
+        this.activeAuthTab = tab;
+        const tabLogin = document.getElementById('tab-login');
+        const tabRegister = document.getElementById('tab-register');
+        const submitBtn = document.getElementById('auth-submit-btn');
+
+        if (tab === 'login') {
+            if (tabLogin) {
+                tabLogin.classList.add('border-cyan-400', 'text-white');
+                tabLogin.classList.remove('border-transparent', 'text-white/60');
+            }
+            if (tabRegister) {
+                tabRegister.classList.add('border-transparent', 'text-white/60');
+                tabRegister.classList.remove('border-cyan-400', 'text-white');
+            }
+            if (submitBtn) submitBtn.innerText = "התחבר";
+        } else {
+            if (tabLogin) {
+                tabLogin.classList.add('border-transparent', 'text-white/60');
+                tabLogin.classList.remove('border-cyan-400', 'text-white');
+            }
+            if (tabRegister) {
+                tabRegister.classList.add('border-cyan-400', 'text-white');
+                tabRegister.classList.remove('border-transparent', 'text-white/60');
+            }
+            if (submitBtn) submitBtn.innerText = "הרשם והתחבר";
+        }
+    },
+
+    async submitAuth() {
+        const usernameInput = document.getElementById('auth-username');
+        const passwordInput = document.getElementById('auth-password');
+        const errorDiv = document.getElementById('auth-error-msg');
+
+        const username = usernameInput ? usernameInput.value : '';
+        const password = passwordInput ? passwordInput.value : '';
+
+        try {
+            if (this.activeAuthTab === 'login') {
+                await Auth.login(username, password);
+            } else {
+                await Auth.register(username, '', password);
+            }
+            
+            this.updateUserBar();
+            this.closeAuthModal();
+        } catch (err) {
+            if (errorDiv) {
+                errorDiv.innerText = err.message;
+                errorDiv.classList.remove('hidden');
+                errorDiv.classList.add('shake');
+                setTimeout(() => errorDiv.classList.remove('shake'), 500);
+            }
+        }
+    },
+
+    handleAuthBarClick() {
+        if (Auth.isLoggedIn()) {
+            Auth.logout();
+            this.updateUserBar();
+        } else {
+            this.openAuthModal();
+        }
+    },
+
+    updateUserBar() {
+        const statusText = document.getElementById('user-status-text');
+        const authBtn = document.getElementById('auth-btn');
+
+        if (Auth.isLoggedIn()) {
+            if (statusText) statusText.innerText = `שלום, ${Auth.currentUser.username} 🍠`;
+            if (authBtn) {
+                authBtn.innerText = "התנתק 🚪";
+                authBtn.className = "bg-red-500/20 hover:bg-red-500/40 text-red-300 border border-red-400/30 py-1 px-2.5 rounded-xl transition";
+            }
+        } else {
+            if (statusText) statusText.innerText = "שלום, אורח 👤";
+            if (authBtn) {
+                authBtn.innerText = "כניסה / הרשמה 🔑";
+                authBtn.className = "bg-cyan-500/20 hover:bg-cyan-500/40 text-cyan-300 border border-cyan-400/30 py-1 px-2.5 rounded-xl transition";
+            }
+        }
     }
 };
