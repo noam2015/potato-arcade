@@ -3,17 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <script>
-        window.onerror = function(message, source, lineno, colno, error) {
-            var errMsg = encodeURIComponent(message + ' at ' + source + ':' + lineno + ':' + colno + (error ? '\nStack: ' + error.stack : ''));
-            fetch('/log-error?msg=' + errMsg).catch(function(){});
-            return false;
-        };
-        window.addEventListener('unhandledrejection', function(event) {
-            var errMsg = encodeURIComponent('Unhandled Rejection: ' + event.reason + (event.reason && event.reason.stack ? '\nStack: ' + event.reason.stack : ''));
-            fetch('/log-error?msg=' + errMsg).catch(function(){});
-        });
-    </script>
     <title>ארקייד הבטטה</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
