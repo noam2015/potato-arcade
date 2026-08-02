@@ -10,6 +10,14 @@ export const Engine = {
         GameState.canvas = document.getElementById('gameCanvas');
         GameState.ctx = GameState.canvas.getContext('2d');
 
+        // Bind Engine to window so UI and mini-games can easily interact with it
+        window.Engine = this;
+        window.shakeCamera = (duration, intensity) => this.shakeCamera(duration, intensity);
+
+        // Initialize particles list
+        GameState.particles = [];
+        GameState.cameraShake = null;
+
         // Initialize UI and Input
         UI.init();
         Input.init(GameState.canvas);
@@ -31,6 +39,32 @@ export const Engine = {
         // Notify the current game if it has a resize method
         if (GameState.currentGameInstance && typeof GameState.currentGameInstance.resize === 'function') {
             GameState.currentGameInstance.resize(GameState.canvas.width, GameState.canvas.height);
+        }
+    },
+
+    shakeCamera(duration = 200, intensity = 6) {
+        GameState.cameraShake = {
+            endTime: performance.now() + duration,
+            intensity: intensity
+        };
+    },
+
+    spawnParticles(x, y, color = '#f59e0b', count = 15, speed = 100) {
+        if (!GameState.particles) {
+            GameState.particles = [];
+        }
+        for (let i = 0; i < count; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const velocity = Math.random() * speed + 30;
+            GameState.particles.push({
+                x: x,
+                y: y,
+                vx: Math.cos(angle) * velocity,
+                vy: Math.sin(angle) * velocity,
+                r: Math.random() * 3.5 + 1.5,
+                color: color,
+                life: Math.random() * 0.6 + 0.4 // duration in seconds
+            });
         }
     },
 
@@ -68,6 +102,8 @@ export const Engine = {
 
         // Reset visual effects and switch state
         GameState.visualEffects = [];
+        GameState.particles = [];
+        GameState.cameraShake = null;
         GameState.state = `GAME${gameNum}`;
         GameState.lastTime = performance.now();
 
@@ -94,11 +130,22 @@ export const Engine = {
         // Clear canvas
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Update and draw active game
+        // Update and draw active game under the camera-shake scope
+        ctx.save();
+        
+        // Apply camera-shake if active
+        if (GameState.cameraShake && timestamp < GameState.cameraShake.endTime) {
+            const dx = (Math.random() - 0.5) * GameState.cameraShake.intensity;
+            const dy = (Math.random() - 0.5) * GameState.cameraShake.intensity;
+            ctx.translate(dx, dy);
+        }
+
         if (GameState.currentGameInstance) {
             GameState.currentGameInstance.update(dt);
             GameState.currentGameInstance.draw(ctx);
         }
+        
+        ctx.restore();
 
         // Render global floating visual effects (emojis)
         for (let i = GameState.visualEffects.length - 1; i >= 0; i--) {
@@ -114,6 +161,28 @@ export const Engine = {
             ctx.restore();
             if (v.life <= 0) {
                 GameState.visualEffects.splice(i, 1);
+            }
+        }
+
+        // Update and render particles
+        if (GameState.particles) {
+            for (let i = GameState.particles.length - 1; i >= 0; i--) {
+                const p = GameState.particles[i];
+                p.x += p.vx * (dt / 1000);
+                p.y += p.vy * (dt / 1000);
+                p.life -= dt / 1000;
+                
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, p.life * 1.5);
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+                
+                if (p.life <= 0) {
+                    GameState.particles.splice(i, 1);
+                }
             }
         }
 
