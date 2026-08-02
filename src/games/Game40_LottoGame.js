@@ -26,6 +26,9 @@ export class Game40_LottoGame extends MiniGame {
         this.roundCashWon = 0;
         this.roundTicketsEarned = 0;
 
+        // Cumulative ticket match accumulator
+        this.totalMatchesAccumulated = 0;
+
         // Setup spinning machine balls
         this.machineBalls = [];
         for (let i = 0; i < 20; i++) {
@@ -125,10 +128,13 @@ export class Game40_LottoGame extends MiniGame {
         this.roundPositionMatches = positionMatches;
         this.roundCashWon = cash + posBonus;
         
-        // Earning tickets: 1 ticket for every 2 correct guesses
-        this.roundTicketsEarned = Math.floor(matches / 2);
+        // Earning tickets cumulatively: 1 ticket for every 2 total matches accumulated (across rounds)
+        let oldTicketsEarned = Math.floor(this.totalMatchesAccumulated / 2);
+        this.totalMatchesAccumulated += matches;
+        let newTicketsEarned = Math.floor(this.totalMatchesAccumulated / 2);
+        this.roundTicketsEarned = newTicketsEarned - oldTicketsEarned;
 
-        // Apply to persistent totals
+        // Apply to totals
         this.score += this.roundCashWon;
         this.lives += this.roundTicketsEarned;
 
@@ -331,7 +337,7 @@ export class Game40_LottoGame extends MiniGame {
             ctx.font = 'bold 16px Arial';
             ctx.fillText(`בחר 6 מספרים לטופס שלך (${this.selectedNumbers.length} / 6)`, centerX, 220);
 
-            // Draw selection boxes
+            // Draw selection grid
             this.gridNumbers.forEach((num, idx) => {
                 let col = idx % 8;
                 let row = Math.floor(idx / 8);
@@ -430,7 +436,7 @@ export class Game40_LottoGame extends MiniGame {
             if (this.state === 'SUMMARY') {
                 let popupY = 345;
                 let popupW = 320;
-                let popupH = 190;
+                let popupH = 195;
                 let popupX = centerX - popupW / 2;
 
                 ctx.fillStyle = '#1e293b'; // slate-800
@@ -443,37 +449,42 @@ export class Game40_LottoGame extends MiniGame {
 
                 ctx.fillStyle = '#ffffff';
                 ctx.font = 'bold 20px Arial';
-                ctx.fillText('🏆 תוצאות ההגרלה 🏆', centerX, popupY + 28);
+                ctx.fillText('🏆 תוצאות ההגרלה 🏆', centerX, popupY + 26);
 
-                ctx.font = '15px Arial';
+                ctx.font = '14px Arial';
                 ctx.textAlign = 'left';
-                let tx = popupX + 35;
-                ctx.fillText(`פגיעות נכונות: ${this.roundMatches} / 6`, tx, popupY + 62);
-                ctx.fillText(`בונוס מיקום: ${this.roundPositionMatches} פגיעות ($${this.roundPositionMatches * 120})`, tx, popupY + 86);
-                ctx.fillText(`סך זכייה: $${this.roundCashWon}`, tx, popupY + 110);
+                let tx = popupX + 30;
+                ctx.fillText(`פגיעות בסיבוב זה: ${this.roundMatches} / 6`, tx, popupY + 54);
+                ctx.fillText(`בונוס מיקום: ${this.roundPositionMatches} פגיעות ($${this.roundPositionMatches * 120})`, tx, popupY + 76);
+                ctx.fillText(`סך זכייה: $${this.roundCashWon}`, tx, popupY + 98);
                 
+                // Show cumulative progress info
+                let nextTicketMatchesNeeded = 2 - (this.totalMatchesAccumulated % 2);
                 ctx.fillStyle = '#fbbf24';
-                ctx.fillText(`כרטיסי בונוס שהרווחת: 🎟️ +${this.roundTicketsEarned}`, tx, popupY + 134);
+                ctx.fillText(`כרטיסי בונוס שהרווחת: 🎟️ +${this.roundTicketsEarned}`, tx, popupY + 120);
+                
+                ctx.fillStyle = '#38bdf8'; // light blue sky
+                ctx.fillText(`עוד ${nextTicketMatchesNeeded} פגיעות כוללות לכרטיס הבא!`, tx, popupY + 142);
 
                 // Play Again / Next Draw Button
                 ctx.textAlign = 'center';
                 if (this.lives > 0) {
                     ctx.fillStyle = '#8b5cf6'; // Purple button
                     ctx.beginPath();
-                    ctx.roundRect(centerX - 80, popupY + 150, 160, 30, 15);
+                    ctx.roundRect(centerX - 80, popupY + 156, 160, 30, 15);
                     ctx.fill();
                     ctx.fillStyle = '#ffffff';
                     ctx.font = 'bold 13px Arial';
-                    ctx.fillText('סבב הבא 🔄', centerX, popupY + 169);
+                    ctx.fillText('סבב הבא 🔄', centerX, popupY + 175);
                 } else {
-                    // Out of tickets - Game Over timer triggers endGame
+                    // Out of tickets - Game Over
                     ctx.fillStyle = '#ef4444';
                     ctx.beginPath();
-                    ctx.roundRect(centerX - 85, popupY + 150, 170, 30, 15);
+                    ctx.roundRect(centerX - 85, popupY + 156, 170, 30, 15);
                     ctx.fill();
                     ctx.fillStyle = '#ffffff';
                     ctx.font = 'bold 12px Arial';
-                    ctx.fillText('נגמרו הכרטיסים! ❌', centerX, popupY + 169);
+                    ctx.fillText('נגמרו הכרטיסים! ❌', centerX, popupY + 175);
 
                     if (!this.gameOverTriggered) {
                         this.gameOverTriggered = true;
@@ -537,8 +548,8 @@ export class Game40_LottoGame extends MiniGame {
             }
         } else if (this.state === 'SUMMARY') {
             // Check Play Again button click
-            // Button is at centerX - 80, Y = 345 + 150 = 495, W = 160, H = 30
-            if (this.lives > 0 && cx >= centerX - 80 && cx <= centerX + 80 && cy >= 495 && cy <= 525) {
+            // Button is at centerX - 80, Y = 345 + 156 = 501, W = 160, H = 30
+            if (this.lives > 0 && cx >= centerX - 80 && cx <= centerX + 80 && cy >= 501 && cy <= 531) {
                 // Reset for next draw
                 this.state = 'SELECTION';
                 this.selectedNumbers = [];
