@@ -1,47 +1,56 @@
-# Rules and Context for Potato Arcade (ארקייד הבטטה) 🍠
+# כללים והקשר עבור ארקייד הבטטה 🍠
 
-This project is a modular arcade platform consisting of 30 canvas-based mini-games.
+פרויקט זה הוא פלטפורמת משחקים מודולרית המורכבת מ-30 משחקי מיני מבוססי קנבס.
 
-## Project Technologies
-- **Core**: HTML5, native ES Modules (ESM), Canvas API
-- **Styling**: Tailwind CSS loaded via CDN (`index.html`) + Custom CSS (`src/styles/style.css`)
-- **Server**: Portable PowerShell server script `start_game_server.ps1` hosting the workspace at `http://localhost:8000`
-
----
-
-## Directory Layout
-- `index.html` - Contains DOM overlays (HUDs), start screen, and game overlays.
-- `src/main.js` - Application entry point.
-- `src/styles/style.css` - Custom styles (shaking, button animations).
-- `src/core/` - Core engine services:
-  - `GameState.js` - Global state (scores, lives, state flags).
-  - `Engine.js` - Main Game Loop, resize events, active game instantiation.
-  - `UI.js` - UI screens, showing/hiding HUDs, visual popups.
-  - `Input.js` - Keyboard and pointer (mouse/touch) event routing.
-- `src/games/` - Mini-game modules:
-  - `MiniGame.js` - Base class with lifecycles: `init()`, `update()`, `draw()`, `handleInput()`, `destroy()`.
-  - `GameRegistry.js` - Maps game numbers (1-30) to their respective classes.
-  - `Game1_Repair.js` to `Game30_PhoneGame.js` - Independent game classes.
-- `src/services/` - Future services:
-  - `Auth.js` - Stub for database login/signup.
-  - `Leaderboard.js` - Stub saving high scores to LocalStorage.
+## טכנולוגיות הפרויקט
+- **ליבה**: HTML5, מודולים מובנים של JavaScript (ESM), ממשק קנבס (Canvas API)
+- **עיצוב**: Tailwind CSS הנטען דרך CDN (`index.html`) + קובץ עיצוב מותאם אישית (`src/styles/style.css`)
+- **שרת**: תסריט שרת מקומי ב-PowerShell בשם `start_game_server.ps1` המריץ את הפרויקט בכתובת `http://localhost:8000`
 
 ---
 
-## Instructions for Agents
-1. **Maintain Architecture**: When creating, editing, or refactoring games, do NOT write monolithic functions. Keep logic strictly modularized inside classes extending `MiniGame.js`.
-2. **Global Integration**: Do not add inline event listeners dynamically if they can be handled via `Input.js` or UI bindings.
-3. **HTML HUDs**: The HTML overlays for all HUDs are declared in `index.html`. Modify `index.html` only when altering HUD layout, and use `UI.js` to show/hide them.
-4. **Heebo Font & RTL Support**: The interface is right-to-left (RTL) and uses the 'Heebo' font. Ensure Hebrew strings are formatted correctly and UI elements do not break.
-5. **No Bundlers**: This project does not use Node.js or npm packages. Use native ES Modules only (`import`/`export` with `.js` extensions).
+## מבנה התיקיות
+- `index.html` - מכיל את שכבות התצוגה (HUD), מסך הפתיחה ומסכי המשחקים.
+- `src/main.js` - נקודת הכניסה הראשית לאפליקציה.
+- `src/styles/style.css` - עיצובים מותאמים אישית (אפקט רעידה, הנפשות כפתורים).
+- `src/core/` - שירותי הליבה של מנוע המשחק:
+  - `GameState.js` - מצב גלובלי (תוצאות, חיים, סימוני מצב).
+  - `Engine.js` - לולאת המשחק הראשית, אירועי שינוי גודל מסך, יצירת מופע של המשחק הפעיל.
+  - `UI.js` - מסכי ממשק משתמש, הצגה והסתרה של שכבות תצוגה, הודעות קופצות.
+  - `Input.js` - ניתוב אירועי מקלדת, עכבר ומגע.
+- `src/games/` - מודולים של משחקי המיני:
+  - `MiniGame.js` - מחלקת הבסיס עם מחזור החיים: `init()`, `update()`, `draw()`, `handleInput()`, `destroy()`.
+  - `GameRegistry.js` - מיפוי מספרי משחקים (1-30) למחלקות המתאימות להם.
+  - `Game1_Repair.js` עד `Game30_PhoneGame.js` - מחלקות משחק עצמאיות.
+- `src/services/` - שירותים נוספים:
+  - `Auth.js` - ניהול משתמשים והתחברות.
+  - `Leaderboard.js` - ניהול ושמירת תוצאות שיא.
 
 ---
 
-## Git Version Control Instructions for Agents
-- **Git Path**: Git is installed at the user-scoped path:
+## הנחיות שפה וכתיבה (חשוב ביותר! ⚠️)
+1. **שימוש בעברית בלבד**: כל התקשורת עם המשתמש, קובצי ההסבר, קובצי ההוראות, והתיעודים חייבים להיכתב בעברית בלבד.
+2. **מניעת ערבוב שפות**: אין לערבב מילים באנגלית בתוך משפטים בעברית אלא אם כן אין ברירה מוחלטת (כמו שמות קבצים מדויקים או פקודות קוד). יש להשתמש במונחים עבריים תקניים ככל הניתן.
+3. **הערות בקוד**: תגובות והסברים בתוך קובצי הקוד ייכתבו בעברית ברורה.
+
+---
+
+## הנחיות לפיתוח עבור סוכנים
+1. **שמירה על הארכיטקטורה**: בעת יצירה, עריכה או שינוי של משחקים, אין לכתוב פונקציות ענקיות ויחידות (מונוליתיות). שמור על לוגיקה מודולרית בתוך מחלקות היורשות מ-`MiniGame.js`.
+2. **אינטגרציה גלובלית**: אין להוסיף מאזיני אירועים (Event Listeners) באופן דינמי ישירות לקנבס אם ניתן לנתב אותם דרך `Input.js` או דרך ממשק המשתמש.
+3. **תצוגות HTML**: שכבות התצוגה של ממשק המשתמש מוגדרות ב-`index.html`. יש לשנות קובץ זה רק לצורך שינוי מבנה הממשק, ולהשתמש ב-`UI.js` כדי להציג או להסתיר אותן.
+4. **תמיכה בכתיבה מימין לשמאל (RTL) וגופן Heebo**: הממשק מותאם לעברית (RTL) ומשתמש בגופן Heebo. ודא שטקסטים בעברית מוצגים כראוי ואינם שוברים את ממשק המשתמש.
+5. **ללא כלי בנייה חיצוניים**: פרויקט זה אינו משתמש ב-Node.js או בחבילות npm בדפדפן. השתמש במודולים מובנים של JavaScript בלבד (ייבוא וייצוא עם סיומת `.js`).
+
+---
+
+## הנחיות לניהול גרסאות (Git) ופריסה (Deployment)
+- **חיבור ל-Netlify**: הפרויקט מחובר ל-GitHub ומבוצעת פריסה אוטומטית (Auto-deploy) ל-Netlify בכל דחיפה (Push) לענף הראשי (`master`).
+- **חובת דחיפת שינויים**: לאחר השלמת משימה, חובה לבצע Commit ו-Push של השינויים לענף הראשי כדי שהם יעודכנו באתר הציבורי של המשחק.
+- **נתיב כלי ה-Git**: כלי ה-Git מותקן בנתיב הבא:
   `C:\Users\noamn\AppData\Local\Programs\Git\cmd\git.exe`
-- **Command Invocation**: When executing Git commands in PowerShell, always invoke it using its absolute path. For example:
+- **הרצת פקודות**: בעת הרצת פקודות Git ב-PowerShell, השתמש תמיד בנתיב המלא. לדוגמה:
   `& "C:\Users\noamn\AppData\Local\Programs\Git\cmd\git.exe" status`
   `& "C:\Users\noamn\AppData\Local\Programs\Git\cmd\git.exe" commit -am "My message"`
-- **Avoid Plain Commands**: Do not invoke plain `git` commands, as the environment variable PATH might not be reloaded in new agent shell sessions.
+- **הימנע מפקודות פשוטות**: אל תריץ את הפקודה `git` ישירות, מכיוון שמשתני הסביבה עלולים שלא להתעדכן כראוי בסביבת הריצה של הסוכן.
 
