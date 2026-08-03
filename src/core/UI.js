@@ -263,11 +263,24 @@ export const UI = {
     renderLeaderboardResults() {
         const gameId = parseInt(document.getElementById('lb-game-select')?.value || '2');
         const diff   = document.getElementById('lb-diff-select')?.value || 'medium';
-        const scores = Leaderboard.getTopScoresSync(gameId, diff, 3);
-
         const container = document.getElementById('lb-results');
         if (!container) return;
 
+        // שלב 1: הצגת התוצאות המקומיות מייד
+        const localScores = Leaderboard.getTopScoresSync(gameId, diff, 3);
+        this._drawScoresList(container, localScores);
+
+        // שלב 2: פנייה לשרת ברקע לעדכון התוצאות של כולם
+        Leaderboard.getTopScores(gameId, diff, 3).then(globalScores => {
+            if (globalScores && globalScores.length > 0) {
+                this._drawScoresList(container, globalScores);
+            }
+        }).catch(err => {
+            console.warn("Failed to fetch global scores, keeping local ones.", err);
+        });
+    },
+
+    _drawScoresList(container, scores) {
         const medals = ['🥇', '🥈', '🥉'];
         const medalColors = [
             'from-yellow-400/20 to-yellow-600/10 border-yellow-500/50 shadow-yellow-500/20',
