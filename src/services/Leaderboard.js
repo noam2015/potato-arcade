@@ -15,14 +15,26 @@ export const Leaderboard = {
      * Submits a score for a given game, difficulty and user.
      */
     async submitScore(gameId, score, userId, difficulty = 'medium') {
+        // הפיכת משתמשי אורח לייחודיים כדי שלא ידרסו אחד את השני בענן
+        let cleanUserId = userId || 'אורח';
+        if (cleanUserId === 'אורח' || cleanUserId === 'guest') {
+            // נבדוק אם כבר יצרנו מזהה אורח ייחודי בדפדפן זה
+            let guestId = localStorage.getItem('potato_arcade_guest_id');
+            if (!guestId) {
+                guestId = `אורח ${Math.floor(100 + Math.random() * 900)}`;
+                localStorage.setItem('potato_arcade_guest_id', guestId);
+            }
+            cleanUserId = guestId;
+        }
+
         // 1. שמירה מקומית כגיבוי
         try {
             const key = this._key(gameId, difficulty);
             const localScores = JSON.parse(localStorage.getItem(key) || '[]');
-            const existingIdx = localScores.findIndex(s => s.userId === userId);
+            const existingIdx = localScores.findIndex(s => s.userId === cleanUserId);
             if (existingIdx === -1 || localScores[existingIdx].score < score) {
                 if (existingIdx !== -1) localScores.splice(existingIdx, 1);
-                localScores.push({ userId, score, timestamp: Date.now() });
+                localScores.push({ userId: cleanUserId, score, timestamp: Date.now() });
                 localScores.sort((a, b) => b.score - a.score);
                 localStorage.setItem(key, JSON.stringify(localScores.slice(0, 10)));
             }
@@ -32,9 +44,9 @@ export const Leaderboard = {
 
         // 2. שמירה ישירה במסד הנתונים בענן
         try {
-            // קריאת המצב הנוכחי מהענן
+            // קריאת המצב הנוכחי מהענן (שימוש בפרמטר זמן למניעת מטמון/Cache)
             let allData = {};
-            const getRes = await fetch(this._dbUrl);
+            const getRes = await fetch(`${this._dbUrl}?t=${Date.now()}`);
             if (getRes.ok) {
                 allData = await getRes.json();
             }
@@ -43,15 +55,15 @@ export const Leaderboard = {
             const currentScores = allData[key] || [];
 
             // עדכון התוצאה
-            const existingUserIdx = currentScores.findIndex(s => s.userId === userId);
+            const existingUserIdx = currentScores.findIndex(s => s.userId === cleanUserId);
             if (existingUserIdx !== -1) {
                 if (currentScores[existingUserIdx].score >= score) {
-                    return true; // השיא הקיים טוב יותר
+                    return true; 
                 }
                 currentScores.splice(existingUserIdx, 1);
             }
 
-            currentScores.push({ userId, score, timestamp: Date.now() });
+            currentScores.push({ userId: cleanUserId, score, timestamp: Date.now() });
             currentScores.sort((a, b) => b.score - a.score);
             allData[key] = currentScores.slice(0, 10);
 
@@ -74,7 +86,8 @@ export const Leaderboard = {
      */
     async getTopScores(gameId, difficulty = 'medium', limit = 3) {
         try {
-            const response = await fetch(this._dbUrl);
+            // הוספת מזהה זמן ייחודי למניעת שימוש בתוצאות ישנות מהמטמון
+            const response = await fetch(`${this._dbUrl}?t=${Date.now()}`);
             if (response.ok) {
                 const allData = await response.json();
                 const key = `scores_${gameId}_${difficulty}`;
