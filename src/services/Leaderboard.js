@@ -1,11 +1,11 @@
 /**
  * Leaderboard service for Potato Arcade.
- * Connects to Netlify Functions / Netlify Blobs for global sync,
- * with LocalStorage fallback for local development.
+ * Connects directly to a global key-value cloud store to sync scores,
+ * with LocalStorage fallback.
  */
 export const Leaderboard = {
-    // הכתובת לפונקציית השרת בנטליפיי
-    _apiUrl: "/.netlify/functions/leaderboard",
+    // כתובת מסד הנתונים הציבורי הישיר
+    _dbUrl: "https://kvstore.de/api/potato_arcade_leaderboard_v1",
 
     _key(gameId, difficulty = 'medium') {
         return `potato_arcade_scores_game_${gameId}_${difficulty}`;
@@ -15,7 +15,7 @@ export const Leaderboard = {
      * Submits a score for a given game, difficulty and user.
      */
     async submitScore(gameId, score, userId, difficulty = 'medium') {
-        // שמירה מקומית כגיבוי
+        // 1. שמירה מקומית כגיבוי
         try {
             const key = this._key(gameId, difficulty);
             const localScores = JSON.parse(localStorage.getItem(key) || '[]');
@@ -30,16 +30,39 @@ export const Leaderboard = {
             console.error("Local save fallback failed:", e);
         }
 
-        // שליחה לשרת הגלובלי בנטליפיי
+        // 2. שמירה ישירה במסד הנתונים בענן
         try {
-            const response = await fetch(this._apiUrl, {
+            // קריאת המצב הנוכחי מהענן
+            let allData = {};
+            const getRes = await fetch(this._dbUrl);
+            if (getRes.ok) {
+                allData = await getRes.json();
+            }
+
+            const key = `scores_${gameId}_${difficulty}`;
+            const currentScores = allData[key] || [];
+
+            // עדכון התוצאה
+            const existingUserIdx = currentScores.findIndex(s => s.userId === userId);
+            if (existingUserIdx !== -1) {
+                if (currentScores[existingUserIdx].score >= score) {
+                    return true; // השיא הקיים טוב יותר
+                }
+                currentScores.splice(existingUserIdx, 1);
+            }
+
+            currentScores.push({ userId, score, timestamp: Date.now() });
+            currentScores.sort((a, b) => b.score - a.score);
+            allData[key] = currentScores.slice(0, 10);
+
+            // שמירה חזרה לענן
+            const postRes = await fetch(this._dbUrl, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ gameId, score, username: userId, difficulty })
+                body: JSON.stringify(allData)
             });
-            if (response.ok) {
-                return true;
-            }
+            
+            return postRes.ok;
         } catch (e) {
             console.warn("Failed to sync score with server. Saved locally.", e);
         }
@@ -51,16 +74,18 @@ export const Leaderboard = {
      */
     async getTopScores(gameId, difficulty = 'medium', limit = 3) {
         try {
-            const response = await fetch(`${this._apiUrl}?gameId=${gameId}&difficulty=${difficulty}`);
+            const response = await fetch(this._dbUrl);
             if (response.ok) {
-                const serverScores = await response.json();
+                const allData = await response.json();
+                const key = `scores_${gameId}_${difficulty}`;
+                const serverScores = allData[key] || [];
                 return serverScores.slice(0, limit);
             }
         } catch (e) {
             console.warn("Failed to fetch global scores, using local scores instead.", e);
         }
 
-        // במקרה של שגיאה או אי-זמינות, נחזור לתוצאות המקומיות
+        // במקרה של שגיאה, נחזור לתוצאות המקומיות
         return this.getTopScoresSync(gameId, difficulty, limit);
     },
 
