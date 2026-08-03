@@ -1,7 +1,9 @@
-import { getStore } from "@netlify/blobs";
+import fetch from "node-fetch";
+
+// מפתח ציבורי ייחודי עבור הפרויקט שלך לשמירת הנתונים
+const STORE_URL = "https://kvstore.de/api/potato_arcade_leaderboard_v1";
 
 export const handler = async (event, context) => {
-  // הגדרת כותרות לתמיכה בבקשות מכל מקור (CORS)
   const headers = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "Content-Type",
@@ -9,14 +11,21 @@ export const handler = async (event, context) => {
     "Content-Type": "application/json"
   };
 
-  // טיפול בבקשות OPTIONS (בדיקה מקדימה של הדפדפן)
   if (event.httpMethod === "OPTIONS") {
     return { statusCode: 200, headers, body: "" };
   }
 
   try {
-    // התחברות לאחסון הנתונים המובטח של נטליפיי
-    const store = getStore("potato_arcade_leaderboard");
+    // 1. קבלת כל הנתונים השמורים
+    let allData = {};
+    try {
+      const getRes = await fetch(STORE_URL);
+      if (getRes.ok) {
+        allData = await getRes.json();
+      }
+    } catch (e) {
+      console.warn("Database is empty or newly created.");
+    }
 
     // קריאת תוצאות (GET)
     if (event.httpMethod === "GET") {
@@ -28,7 +37,7 @@ export const handler = async (event, context) => {
       }
 
       const key = `scores_${gameId}_${difficulty}`;
-      const data = await store.get(key, { type: "json" }) || [];
+      const data = allData[key] || [];
       
       return {
         statusCode: 200,
@@ -47,13 +56,12 @@ export const handler = async (event, context) => {
       }
 
       const key = `scores_${gameId}_${diff}`;
-      const currentScores = await store.get(key, { type: "json" }) || [];
+      const currentScores = allData[key] || [];
 
       // עדכון התוצאה של המשתמש אם היא טובה יותר
       const existingUserIdx = currentScores.findIndex(s => s.userId === username);
       if (existingUserIdx !== -1) {
         if (currentScores[existingUserIdx].score >= score) {
-          // התוצאה הקיימת טובה או שווה, אין צורך לעדכן
           return { statusCode: 200, headers, body: JSON.stringify(currentScores) };
         }
         currentScores.splice(existingUserIdx, 1);
@@ -63,13 +71,19 @@ export const handler = async (event, context) => {
       currentScores.sort((a, b) => b.score - a.score);
       
       // שמירה של 10 השיאים הגבוהים בלבד
-      const topScores = currentScores.slice(0, 10);
-      await store.set(key, JSON.stringify(topScores));
+      allData[key] = currentScores.slice(0, 10);
+
+      // שמירה חזרה למסד הנתונים
+      await fetch(STORE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(allData)
+      });
 
       return {
         statusCode: 200,
         headers,
-        body: JSON.stringify(topScores)
+        body: JSON.stringify(allData[key])
       };
     }
 
