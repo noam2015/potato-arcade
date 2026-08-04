@@ -1,6 +1,6 @@
 import { getStore } from "@netlify/blobs";
 
-export const handler = async (event, context) => {
+export default async (req, context) => {
   const headers = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "Content-Type",
@@ -8,39 +8,45 @@ export const handler = async (event, context) => {
     "Content-Type": "application/json"
   };
 
-  if (event.httpMethod === "OPTIONS") {
-    return { statusCode: 200, headers, body: "" };
+  if (req.method === "OPTIONS") {
+    return new Response("", { status: 200, headers });
   }
 
   try {
     const store = getStore("potato_arcade_leaderboard");
 
     // קריאת תוצאות (GET)
-    if (event.httpMethod === "GET") {
-      const gameId = event.queryStringParameters.gameId;
-      const difficulty = event.queryStringParameters.difficulty || "medium";
+    if (req.method === "GET") {
+      const url = new URL(req.url);
+      const gameId = url.searchParams.get("gameId");
+      const difficulty = url.searchParams.get("difficulty") || "medium";
 
       if (!gameId) {
-        return { statusCode: 400, headers, body: JSON.stringify({ error: "Missing gameId" }) };
+        return new Response(JSON.stringify({ error: "Missing gameId" }), {
+          status: 400,
+          headers
+        });
       }
 
       const key = `scores_${gameId}_${difficulty}`;
       const data = await store.get(key, { type: "json" }) || [];
       
-      return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify(data)
-      };
+      return new Response(JSON.stringify(data), {
+        status: 200,
+        headers
+      });
     }
 
     // כתיבת תוצאה חדשה (POST)
-    if (event.httpMethod === "POST") {
-      const { gameId, score, username, difficulty } = JSON.parse(event.body || "{}");
+    if (req.method === "POST") {
+      const { gameId, score, username, difficulty } = await req.json();
       const diff = difficulty || "medium";
 
       if (!gameId || score === undefined || !username) {
-        return { statusCode: 400, headers, body: JSON.stringify({ error: "Missing parameters" }) };
+        return new Response(JSON.stringify({ error: "Missing parameters" }), {
+          status: 400,
+          headers
+        });
       }
 
       const key = `scores_${gameId}_${diff}`;
@@ -50,7 +56,10 @@ export const handler = async (event, context) => {
       const existingUserIdx = currentScores.findIndex(s => s.userId === username);
       if (existingUserIdx !== -1) {
         if (currentScores[existingUserIdx].score >= score) {
-          return { statusCode: 200, headers, body: JSON.stringify(currentScores) };
+          return new Response(JSON.stringify(currentScores), {
+            status: 200,
+            headers
+          });
         }
         currentScores.splice(existingUserIdx, 1);
       }
@@ -60,22 +69,20 @@ export const handler = async (event, context) => {
       
       // שמירה של 10 השיאים הגבוהים בלבד
       const topScores = currentScores.slice(0, 10);
-      await store.set(key, JSON.stringify(topScores));
+      await store.set(key, topScores);
 
-      return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify(topScores)
-      };
+      return new Response(JSON.stringify(topScores), {
+        status: 200,
+        headers
+      });
     }
 
-    return { statusCode: 405, headers, body: "Method Not Allowed" };
+    return new Response("Method Not Allowed", { status: 405, headers });
   } catch (error) {
     console.error("Error in leaderboard function:", error);
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({ error: error.message })
-    };
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers
+    });
   }
 };

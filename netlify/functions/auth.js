@@ -1,6 +1,6 @@
 import { getStore } from "@netlify/blobs";
 
-export const handler = async (event, context) => {
+export default async (req, context) => {
   const headers = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "Content-Type",
@@ -8,21 +8,24 @@ export const handler = async (event, context) => {
     "Content-Type": "application/json"
   };
 
-  if (event.httpMethod === "OPTIONS") {
-    return { statusCode: 200, headers, body: "" };
+  if (req.method === "OPTIONS") {
+    return new Response("", { status: 200, headers });
   }
 
-  if (event.httpMethod !== "POST") {
-    return { statusCode: 405, headers, body: "Method Not Allowed" };
+  if (req.method !== "POST") {
+    return new Response("Method Not Allowed", { status: 405, headers });
   }
 
   try {
-    const { action, username, password } = JSON.parse(event.body || "{}");
+    const { action, username, password } = await req.json();
     const cleanUsername = (username || "").trim();
     const cleanPassword = (password || "").trim();
 
     if (!cleanUsername || !cleanPassword) {
-      return { statusCode: 400, headers, body: JSON.stringify({ error: "נא למלא את כל השדות" }) };
+      return new Response(JSON.stringify({ error: "נא למלא את כל השדות" }), {
+        status: 400,
+        headers
+      });
     }
 
     const store = getStore("potato_arcade_users");
@@ -30,12 +33,18 @@ export const handler = async (event, context) => {
 
     if (action === "register") {
       if (cleanUsername.length < 3) {
-        return { statusCode: 400, headers, body: JSON.stringify({ error: "שם המשתמש חייב להיות לפחות 3 תווים" }) };
+        return new Response(JSON.stringify({ error: "שם המשתמש חייב להיות לפחות 3 תווים" }), {
+          status: 400,
+          headers
+        });
       }
-      
+
       const existingUser = await store.get(key, { type: "json" });
       if (existingUser) {
-        return { statusCode: 400, headers, body: JSON.stringify({ error: "שם המשתמש כבר תפוס" }) };
+        return new Response(JSON.stringify({ error: "שם המשתמש כבר תפוס" }), {
+          status: 400,
+          headers
+        });
       }
 
       const newUser = {
@@ -44,36 +53,42 @@ export const handler = async (event, context) => {
         registeredAt: Date.now()
       };
 
-      await store.set(key, JSON.stringify(newUser));
+      await store.set(key, newUser);
 
-      return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify({ username: cleanUsername, role: "player" })
-      };
+      return new Response(JSON.stringify({ username: cleanUsername, role: "player" }), {
+        status: 200,
+        headers
+      });
     } else if (action === "login") {
       const user = await store.get(key, { type: "json" });
       if (!user) {
-        return { statusCode: 400, headers, body: JSON.stringify({ error: "שם המשתמש אינו קיים" }) };
+        return new Response(JSON.stringify({ error: "שם המשתמש אינו קיים" }), {
+          status: 400,
+          headers
+        });
       }
       if (user.password !== cleanPassword) {
-        return { statusCode: 400, headers, body: JSON.stringify({ error: "סיסמה שגויה" }) };
+        return new Response(JSON.stringify({ error: "סיסמה שגויה" }), {
+          status: 400,
+          headers
+        });
       }
 
-      return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify({ username: user.username, role: "player" })
-      };
+      return new Response(JSON.stringify({ username: user.username, role: "player" }), {
+        status: 200,
+        headers
+      });
     }
 
-    return { statusCode: 400, headers, body: JSON.stringify({ error: "פעולה לא תקינה" }) };
+    return new Response(JSON.stringify({ error: "פעולה לא תקינה" }), {
+      status: 400,
+      headers
+    });
   } catch (error) {
     console.error("Error in auth function:", error);
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({ error: error.message })
-    };
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers
+    });
   }
 };
