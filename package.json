@@ -4,6 +4,7 @@
   "description": "Potato Arcade Retro Games",
   "main": "src/main.js",
   "dependencies": {
+    "@netlify/blobs": "^8.0.0",
     "node-fetch": "^2.7.0"
   }
 }
