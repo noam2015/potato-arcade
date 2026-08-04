@@ -173,6 +173,12 @@ export const UI = {
         // Initialize Auth
         Auth.init();
 
+        // Hide dashboard link in production
+        const dbLink = document.getElementById('dashboard-link');
+        if (dbLink && !Auth._isLocal()) {
+            dbLink.classList.add('hidden');
+        }
+
         // Bind auth handlers
         const authBtn = document.getElementById('auth-btn');
         if (authBtn) authBtn.onclick = () => this.handleAuthBarClick();
