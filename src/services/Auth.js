@@ -48,21 +48,51 @@ export const Auth = {
         let userObj = null;
 
         if (this._isLocal()) {
-            const users = this._getUsersLocal();
-            const key = cleanUsername.toLowerCase();
+            try {
+                // Try fetching users list from local dashboard server
+                const response = await fetch('http://localhost:3000/api/users');
+                if (response.ok) {
+                    const users = await response.json();
+                    const key = cleanUsername.toLowerCase();
 
-            if (!users[key]) {
-                throw new Error("שם המשתמש אינו קיים");
+                    if (!users[key]) {
+                        throw new Error("שם המשתמש אינו קיים");
+                    }
+
+                    if (users[key].password !== cleanPassword) {
+                        throw new Error("סיסמה שגויה");
+                    }
+
+                    userObj = {
+                        username: users[key].username,
+                        role: "player"
+                    };
+                } else {
+                    throw new Error("Server error");
+                }
+            } catch (err) {
+                if (err.message === "שם המשתמש אינו קיים" || err.message === "סיסמה שגויה") {
+                    throw err;
+                }
+                console.warn("Dashboard local server unreachable, falling back to LocalStorage:", err);
+                
+                // Fallback to local storage
+                const users = this._getUsersLocal();
+                const key = cleanUsername.toLowerCase();
+
+                if (!users[key]) {
+                    throw new Error("שם המשתמש אינו קיים");
+                }
+
+                if (users[key].password !== cleanPassword) {
+                    throw new Error("סיסמה שגויה");
+                }
+
+                userObj = {
+                    username: users[key].username,
+                    role: "player"
+                };
             }
-
-            if (users[key].password !== cleanPassword) {
-                throw new Error("סיסמה שגויה");
-            }
-
-            userObj = {
-                username: users[key].username,
-                role: "player"
-            };
         } else {
             try {
                 const response = await fetch('/.netlify/functions/auth', {
@@ -120,25 +150,51 @@ export const Auth = {
         let userObj = null;
 
         if (this._isLocal()) {
-            const users = this._getUsersLocal();
-            const key = cleanUsername.toLowerCase();
+            try {
+                // Try registering at local dashboard server
+                const response = await fetch('http://localhost:3000/api/users/add', {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username: cleanUsername, password: cleanPassword })
+                });
 
-            if (users[key]) {
-                throw new Error("שם המשתמש כבר תפוס");
+                if (response.ok) {
+                    userObj = await response.json();
+                } else {
+                    const errData = await response.json().catch(() => ({}));
+                    if (errData.error === "missing_fields") throw new Error("נא למלא את כל השדות");
+                    if (errData.error === "username_too_short") throw new Error("שם המשתמש חייב להיות לפחות 3 תווים");
+                    if (errData.error === "username_taken") throw new Error("שם המשתמש כבר תפוס");
+                    throw new Error(errData.error || "הרשמה בשרת נכשלה");
+                }
+            } catch (err) {
+                // Propagate validation errors
+                if (err.message === "שם המשתמש כבר תפוס" || err.message === "שם המשתמש חייב להיות לפחות 3 תווים" || err.message === "נא למלא את כל השדות") {
+                    throw err;
+                }
+                console.warn("Dashboard local server unreachable, falling back to LocalStorage:", err);
+
+                // Fallback to local storage
+                const users = this._getUsersLocal();
+                const key = cleanUsername.toLowerCase();
+
+                if (users[key]) {
+                    throw new Error("שם המשתמש כבר תפוס");
+                }
+
+                users[key] = {
+                    username: cleanUsername,
+                    password: cleanPassword,
+                    registeredAt: Date.now()
+                };
+
+                this._saveUsersLocal(users);
+
+                userObj = {
+                    username: cleanUsername,
+                    role: "player"
+                };
             }
-
-            users[key] = {
-                username: cleanUsername,
-                password: cleanPassword,
-                registeredAt: Date.now()
-            };
-
-            this._saveUsersLocal(users);
-
-            userObj = {
-                username: cleanUsername,
-                role: "player"
-            };
         } else {
             try {
                 const response = await fetch('/.netlify/functions/auth', {
@@ -173,6 +229,7 @@ export const Auth = {
 
         return this.currentUser;
     },
+
 
     /**
      * Logs out the current user.

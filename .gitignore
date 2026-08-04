@@ -11,3 +11,6 @@ Desktop.ini
 *.njsproj
 *.sln
 *.swp
+
+# Standalone local dashboard
+potato-dashboard/

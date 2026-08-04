@@ -47,8 +47,24 @@ export const Leaderboard = {
             console.error("Local save failed:", e);
         }
 
-        // 2. שמירה בענן (רק במידה ולא רץ מקומית)
-        if (!this._isLocal()) {
+        // 2. שמירה בשרת מקומי (ריצה מקומית) או בענן (בייצור)
+        if (this._isLocal()) {
+            try {
+                const postRes = await fetch('http://localhost:3000/api/scores/submit', {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        gameId,
+                        score,
+                        username: cleanUserId,
+                        difficulty
+                    })
+                });
+                return postRes.ok;
+            } catch (e) {
+                console.warn("Dashboard local server unreachable for submitScore, fell back to LocalStorage:", e);
+            }
+        } else {
             try {
                 const postRes = await fetch('/.netlify/functions/leaderboard', {
                     method: "POST",
@@ -90,9 +106,20 @@ export const Leaderboard = {
             } catch (e) {
                 console.error("Fetch exception during Netlify leaderboard getTopScores:", e);
             }
+        } else {
+            try {
+                // פנייה לשרת הדשבורד המקומי
+                const response = await fetch(`http://localhost:3000/api/scores/${gameId}/${difficulty}`);
+                if (response.ok) {
+                    const serverScores = await response.json();
+                    return serverScores.slice(0, limit);
+                }
+            } catch (e) {
+                console.warn("Dashboard local server unreachable for getTopScores, falling back to LocalStorage:", e);
+            }
         }
 
-        // במקרה של שגיאה או ריצה מקומית, נחזור לתוצאות המקומיות
+        // במקרה של שגיאה או ריצה מקומית שבה השרת המקומי אינו זמין, נחזור לתוצאות המקומיות מה-LocalStorage
         return this.getTopScoresSync(gameId, difficulty, limit);
     },
 
@@ -109,4 +136,5 @@ export const Leaderboard = {
             return [];
         }
     }
+
 };
