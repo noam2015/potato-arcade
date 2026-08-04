@@ -29,7 +29,12 @@ export default async (req, context) => {
       }
 
       const key = `scores_${gameId}_${difficulty}`;
-      const data = await store.get(key, { type: "json" }) || [];
+      let data = [];
+      try {
+        data = await store.get(key, { type: "json" }) || [];
+      } catch (e) {
+        console.warn("Corrupt leaderboard data found, resetting to empty array:", e);
+      }
       
       return new Response(JSON.stringify(data), {
         status: 200,
@@ -50,7 +55,12 @@ export default async (req, context) => {
       }
 
       const key = `scores_${gameId}_${diff}`;
-      const currentScores = await store.get(key, { type: "json" }) || [];
+      let currentScores = [];
+      try {
+        currentScores = await store.get(key, { type: "json" }) || [];
+      } catch (e) {
+        console.warn("Corrupt leaderboard data found during update, resetting to empty:", e);
+      }
 
       // עדכון התוצאה של המשתמש אם היא טובה יותר
       const existingUserIdx = currentScores.findIndex(s => s.userId === username);

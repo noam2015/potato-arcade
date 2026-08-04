@@ -39,7 +39,13 @@ export default async (req, context) => {
         });
       }
 
-      const existingUser = await store.get(key, { type: "json" });
+      let existingUser = null;
+      try {
+        existingUser = await store.get(key, { type: "json" });
+      } catch (e) {
+        console.warn("Corrupt user data found during check, ignoring and letting overwrite:", e);
+      }
+
       if (existingUser) {
         return new Response(JSON.stringify({ error: "שם המשתמש כבר תפוס" }), {
           status: 400,
@@ -60,7 +66,13 @@ export default async (req, context) => {
         headers
       });
     } else if (action === "login") {
-      const user = await store.get(key, { type: "json" });
+      let user = null;
+      try {
+        user = await store.get(key, { type: "json" });
+      } catch (e) {
+        console.warn("Corrupt user data found during login, treating as non-existent:", e);
+      }
+
       if (!user) {
         return new Response(JSON.stringify({ error: "שם המשתמש אינו קיים" }), {
           status: 400,
