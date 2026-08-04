@@ -21,6 +21,8 @@ export default async (req, context) => {
     const cleanUsername = (username || "").trim();
     const cleanPassword = (password || "").trim();
 
+    console.log(`[Auth Function] Action: ${action}, Username: ${cleanUsername}`);
+
     if (!cleanUsername || !cleanPassword) {
       return new Response(JSON.stringify({ error: "נא למלא את כל השדות" }), {
         status: 400,
@@ -28,8 +30,9 @@ export default async (req, context) => {
       });
     }
 
-    const store = getStore("potato_arcade_users");
+    const store = getStore({ name: "potato_arcade_users", consistency: "strong" });
     const key = cleanUsername.toLowerCase();
+    console.log(`[Auth Function] Store Key: ${key}`);
 
     if (action === "register") {
       if (cleanUsername.length < 3) {
@@ -42,8 +45,9 @@ export default async (req, context) => {
       let existingUser = null;
       try {
         existingUser = await store.get(key, { type: "json" });
+        console.log(`[Auth Function] Read existing user for registration. Found:`, existingUser ? "Yes" : "No");
       } catch (e) {
-        console.warn("Corrupt user data found during check, ignoring and letting overwrite:", e);
+        console.warn("[Auth Function] Corrupt user data found during check, ignoring and letting overwrite:", e);
       }
 
       if (existingUser) {
@@ -59,7 +63,9 @@ export default async (req, context) => {
         registeredAt: Date.now()
       };
 
+      console.log(`[Auth Function] Saving new user to store under key ${key}...`);
       await store.set(key, JSON.stringify(newUser));
+      console.log(`[Auth Function] New user saved successfully.`);
 
       return new Response(JSON.stringify({ username: cleanUsername, role: "player" }), {
         status: 200,
@@ -68,9 +74,11 @@ export default async (req, context) => {
     } else if (action === "login") {
       let user = null;
       try {
+        console.log(`[Auth Function] Fetching user key ${key} from store...`);
         user = await store.get(key, { type: "json" });
+        console.log(`[Auth Function] User query complete. Found:`, user ? "Yes" : "No");
       } catch (e) {
-        console.warn("Corrupt user data found during login, treating as non-existent:", e);
+        console.warn("[Auth Function] Corrupt user data found during login, treating as non-existent:", e);
       }
 
       if (!user) {
@@ -97,7 +105,7 @@ export default async (req, context) => {
       headers
     });
   } catch (error) {
-    console.error("Error in auth function:", error);
+    console.error("[Auth Function] Fatal error in auth function:", error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers

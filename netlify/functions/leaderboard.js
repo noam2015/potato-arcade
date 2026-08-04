@@ -13,7 +13,7 @@ export default async (req, context) => {
   }
 
   try {
-    const store = getStore("potato_arcade_leaderboard");
+    const store = getStore({ name: "potato_arcade_leaderboard", consistency: "strong" });
 
     // קריאת תוצאות (GET)
     if (req.method === "GET") {
