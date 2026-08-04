@@ -64,20 +64,28 @@ export const Auth = {
                 role: "player"
             };
         } else {
-            const response = await fetch('/.netlify/functions/auth', {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    action: "login",
-                    username: cleanUsername,
-                    password: cleanPassword
-                })
-            });
-            if (!response.ok) {
-                const errData = await response.json().catch(() => ({}));
-                throw new Error(errData.error || "התחברות נכשלה");
+            try {
+                const response = await fetch('/.netlify/functions/auth', {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        action: "login",
+                        username: cleanUsername,
+                        password: cleanPassword
+                    })
+                });
+                if (!response.ok) {
+                    const errText = await response.text().catch(() => "Unknown error text");
+                    console.error("Netlify auth login returned non-ok status:", response.status, errText);
+                    let errJSON = {};
+                    try { errJSON = JSON.parse(errText); } catch(e) {}
+                    throw new Error(errJSON.error || `התחברות נכשלה (קוד: ${response.status})`);
+                }
+                userObj = await response.json();
+            } catch (e) {
+                console.error("Fetch exception during Netlify auth login:", e);
+                throw e;
             }
-            userObj = await response.json();
         }
 
         this.currentUser = userObj;
@@ -132,20 +140,28 @@ export const Auth = {
                 role: "player"
             };
         } else {
-            const response = await fetch('/.netlify/functions/auth', {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    action: "register",
-                    username: cleanUsername,
-                    password: cleanPassword
-                })
-            });
-            if (!response.ok) {
-                const errData = await response.json().catch(() => ({}));
-                throw new Error(errData.error || "הרשמה נכשלה");
+            try {
+                const response = await fetch('/.netlify/functions/auth', {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        action: "register",
+                        username: cleanUsername,
+                        password: cleanPassword
+                    })
+                });
+                if (!response.ok) {
+                    const errText = await response.text().catch(() => "Unknown error text");
+                    console.error("Netlify auth register returned non-ok status:", response.status, errText);
+                    let errJSON = {};
+                    try { errJSON = JSON.parse(errText); } catch(e) {}
+                    throw new Error(errJSON.error || `הרשמה נכשלה (קוד: ${response.status})`);
+                }
+                userObj = await response.json();
+            } catch (e) {
+                console.error("Fetch exception during Netlify auth register:", e);
+                throw e;
             }
-            userObj = await response.json();
         }
 
         this.currentUser = userObj;

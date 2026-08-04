@@ -60,9 +60,13 @@ export const Leaderboard = {
                         difficulty
                     })
                 });
+                if (!postRes.ok) {
+                    const errText = await postRes.text().catch(() => "Unknown error text");
+                    console.error("Netlify leaderboard submitScore returned non-ok status:", postRes.status, errText);
+                }
                 return postRes.ok;
             } catch (e) {
-                console.warn("Failed to sync score with server.", e);
+                console.error("Fetch exception during Netlify leaderboard submitScore:", e);
             }
         }
         return true;
@@ -79,9 +83,12 @@ export const Leaderboard = {
                 if (response.ok) {
                     const serverScores = await response.json();
                     return serverScores.slice(0, limit);
+                } else {
+                    const errText = await response.text().catch(() => "Unknown error text");
+                    console.error("Netlify leaderboard getTopScores returned non-ok status:", response.status, errText);
                 }
             } catch (e) {
-                console.warn("Failed to fetch global scores, using local scores.", e);
+                console.error("Fetch exception during Netlify leaderboard getTopScores:", e);
             }
         }
 
