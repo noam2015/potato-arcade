@@ -1,4 +1,3 @@
-import fetch from "node-fetch";
 
 // מפתח ציבורי ייחודי עבור הפרויקט שלך לשמירת הנתונים
 const STORE_URL = "https://kvstore.dev/api/potato_arcade_leaderboard_v1";

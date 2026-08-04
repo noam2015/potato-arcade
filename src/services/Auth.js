@@ -4,6 +4,16 @@
  */
 export const Auth = {
     currentUser: null,
+    _dbUrl: "https://kvstore.dev/api/potato_arcade_users_v1",
+
+    _isLocal() {
+        const hostname = window.location.hostname;
+        return hostname === 'localhost' || 
+               hostname === '127.0.0.1' || 
+               hostname.startsWith('192.168.') || 
+               hostname.startsWith('10.') || 
+               hostname.startsWith('172.');
+    },
 
     /**
      * Initializes the auth session by checking localStorage.
@@ -36,22 +46,50 @@ export const Auth = {
             throw new Error("נא למלא את כל השדות");
         }
 
-        const users = this._getUsers();
-        const key = cleanUsername.toLowerCase();
+        let userObj = null;
 
-        if (!users[key]) {
-            throw new Error("שם המשתמש אינו קיים");
+        if (this._isLocal()) {
+            // התחברות ישירה מול מסד הנתונים בענן בריצה מקומית
+            let users = {};
+            try {
+                const getRes = await fetch(`${this._dbUrl}?t=${Date.now()}`);
+                if (getRes.ok) {
+                    users = await getRes.json();
+                }
+            } catch (e) {
+                console.error("Failed to fetch cloud users:", e);
+            }
+
+            const key = cleanUsername.toLowerCase();
+            if (!users[key]) {
+                throw new Error("שם המשתמש אינו קיים");
+            }
+            if (users[key].password !== cleanPassword) {
+                throw new Error("סיסמה שגויה");
+            }
+            userObj = {
+                username: users[key].username,
+                role: "player"
+            };
+        } else {
+            // התחברות דרך פונקציית Netlify
+            const response = await fetch('/.netlify/functions/auth', {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    action: "login",
+                    username: cleanUsername,
+                    password: cleanPassword
+                })
+            });
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                throw new Error(errData.error || "התחברות נכשלה");
+            }
+            userObj = await response.json();
         }
 
-        if (users[key].password !== cleanPassword) {
-            throw new Error("סיסמה שגויה");
-        }
-
-        this.currentUser = {
-            username: users[key].username, // Keep original casing
-            role: "player"
-        };
-
+        this.currentUser = userObj;
         try {
             localStorage.setItem('potato_arcade_session', this.currentUser.username);
         } catch (e) {
@@ -80,23 +118,71 @@ export const Auth = {
             throw new Error("שם המשתמש חייב להיות לפחות 3 תווים");
         }
 
-        const users = this._getUsers();
-        const key = cleanUsername.toLowerCase();
+        let userObj = null;
 
-        if (users[key]) {
-            throw new Error("שם המשתמש כבר תפוס");
+        if (this._isLocal()) {
+            // הרשמה ישירה מול מסד הנתונים בענן בריצה מקומית
+            let users = {};
+            try {
+                const getRes = await fetch(`${this._dbUrl}?t=${Date.now()}`);
+                if (getRes.ok) {
+                    users = await getRes.json();
+                }
+            } catch (e) {
+                console.error("Failed to fetch cloud users:", e);
+            }
+
+            const key = cleanUsername.toLowerCase();
+            if (users[key]) {
+                throw new Error("שם המשתמש כבר תפוס");
+            }
+
+            users[key] = {
+                username: cleanUsername,
+                password: cleanPassword,
+                registeredAt: Date.now()
+            };
+
+            const postRes = await fetch(this._dbUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(users)
+            });
+
+            if (!postRes.ok) {
+                throw new Error("הרשמה נכשלה בשמירה לענן");
+            }
+
+            userObj = {
+                username: cleanUsername,
+                role: "player"
+            };
+        } else {
+            // הרשמה דרך פונקציית Netlify
+            const response = await fetch('/.netlify/functions/auth', {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    action: "register",
+                    username: cleanUsername,
+                    password: cleanPassword
+                })
+            });
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                throw new Error(errData.error || "הרשמה נכשלה");
+            }
+            userObj = await response.json();
         }
 
-        // Add user
-        users[key] = {
-            username: cleanUsername,
-            password: cleanPassword,
-            registeredAt: Date.now()
-        };
+        this.currentUser = userObj;
+        try {
+            localStorage.setItem('potato_arcade_session', this.currentUser.username);
+        } catch (e) {
+            console.error("Failed to save auth session:", e);
+        }
 
-        this._saveUsers(users);
-
-        return this.login(cleanUsername, cleanPassword);
+        return this.currentUser;
     },
 
     /**
