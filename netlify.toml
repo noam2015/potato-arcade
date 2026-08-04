@@ -1,5 +1,9 @@
 [build]
   publish = "."
 
+[build.environment]
+  ADMIN_TOKEN = "potato_arcade_admin_secret_token_2026"
+
 [functions]
   directory = "netlify/functions"
+
