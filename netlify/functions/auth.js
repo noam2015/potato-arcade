@@ -1,4 +1,4 @@
-const STORE_URL = "https://kvstore.dev/api/potato_arcade_users_v1";
+import { getStore } from "@netlify/blobs";
 
 export const handler = async (event, context) => {
   const headers = {
@@ -25,41 +25,26 @@ export const handler = async (event, context) => {
       return { statusCode: 400, headers, body: JSON.stringify({ error: "נא למלא את כל השדות" }) };
     }
 
-    // 1. קריאת המשתמשים הקיימים מהענן
-    let users = {};
-    try {
-      const getRes = await fetch(`${STORE_URL}?t=${Date.now()}`);
-      if (getRes.ok) {
-        users = await getRes.json();
-      }
-    } catch (e) {
-      console.warn("Database is empty or newly created.");
-    }
-
+    const store = getStore("potato_arcade_users");
     const key = cleanUsername.toLowerCase();
 
-    // 2. ביצוע הפעולה המבוקשת (הרשמה או התחברות)
     if (action === "register") {
       if (cleanUsername.length < 3) {
         return { statusCode: 400, headers, body: JSON.stringify({ error: "שם המשתמש חייב להיות לפחות 3 תווים" }) };
       }
-      if (users[key]) {
+      
+      const existingUser = await store.get(key, { type: "json" });
+      if (existingUser) {
         return { statusCode: 400, headers, body: JSON.stringify({ error: "שם המשתמש כבר תפוס" }) };
       }
 
-      // הוספת משתמש חדש
-      users[key] = {
-        username: cleanUsername, // שמירה על אותיות גדולות/קטנות מקוריות
+      const newUser = {
+        username: cleanUsername,
         password: cleanPassword,
         registeredAt: Date.now()
       };
 
-      // שמירה חזרה לענן
-      await fetch(STORE_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(users)
-      });
+      await store.set(key, JSON.stringify(newUser));
 
       return {
         statusCode: 200,
@@ -67,17 +52,18 @@ export const handler = async (event, context) => {
         body: JSON.stringify({ username: cleanUsername, role: "player" })
       };
     } else if (action === "login") {
-      if (!users[key]) {
+      const user = await store.get(key, { type: "json" });
+      if (!user) {
         return { statusCode: 400, headers, body: JSON.stringify({ error: "שם המשתמש אינו קיים" }) };
       }
-      if (users[key].password !== cleanPassword) {
+      if (user.password !== cleanPassword) {
         return { statusCode: 400, headers, body: JSON.stringify({ error: "סיסמה שגויה" }) };
       }
 
       return {
         statusCode: 200,
         headers,
-        body: JSON.stringify({ username: users[key].username, role: "player" })
+        body: JSON.stringify({ username: user.username, role: "player" })
       };
     }
 

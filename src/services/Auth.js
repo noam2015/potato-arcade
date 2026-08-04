@@ -1,10 +1,9 @@
 /**
  * Authentication service for Potato Arcade.
- * Manages users locally using LocalStorage.
+ * Manages users locally using LocalStorage or via Netlify Functions in production.
  */
 export const Auth = {
     currentUser: null,
-    _dbUrl: "https://kvstore.dev/api/potato_arcade_users_v1",
 
     _isLocal() {
         const hostname = window.location.hostname;
@@ -49,30 +48,22 @@ export const Auth = {
         let userObj = null;
 
         if (this._isLocal()) {
-            // התחברות ישירה מול מסד הנתונים בענן בריצה מקומית
-            let users = {};
-            try {
-                const getRes = await fetch(`${this._dbUrl}?t=${Date.now()}`);
-                if (getRes.ok) {
-                    users = await getRes.json();
-                }
-            } catch (e) {
-                console.error("Failed to fetch cloud users:", e);
-            }
-
+            const users = this._getUsersLocal();
             const key = cleanUsername.toLowerCase();
+
             if (!users[key]) {
                 throw new Error("שם המשתמש אינו קיים");
             }
+
             if (users[key].password !== cleanPassword) {
                 throw new Error("סיסמה שגויה");
             }
+
             userObj = {
                 username: users[key].username,
                 role: "player"
             };
         } else {
-            // התחברות דרך פונקציית Netlify
             const response = await fetch('/.netlify/functions/auth', {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -102,7 +93,7 @@ export const Auth = {
     /**
      * Registers a new user.
      * @param {string} username 
-     * @param {string} email - unused for local storage but kept for API compatibility
+     * @param {string} email - unused but kept for compatibility
      * @param {string} password 
      * @returns {Promise<Object>}
      */
@@ -121,18 +112,9 @@ export const Auth = {
         let userObj = null;
 
         if (this._isLocal()) {
-            // הרשמה ישירה מול מסד הנתונים בענן בריצה מקומית
-            let users = {};
-            try {
-                const getRes = await fetch(`${this._dbUrl}?t=${Date.now()}`);
-                if (getRes.ok) {
-                    users = await getRes.json();
-                }
-            } catch (e) {
-                console.error("Failed to fetch cloud users:", e);
-            }
-
+            const users = this._getUsersLocal();
             const key = cleanUsername.toLowerCase();
+
             if (users[key]) {
                 throw new Error("שם המשתמש כבר תפוס");
             }
@@ -143,22 +125,13 @@ export const Auth = {
                 registeredAt: Date.now()
             };
 
-            const postRes = await fetch(this._dbUrl, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(users)
-            });
-
-            if (!postRes.ok) {
-                throw new Error("הרשמה נכשלה בשמירה לענן");
-            }
+            this._saveUsersLocal(users);
 
             userObj = {
                 username: cleanUsername,
                 role: "player"
             };
         } else {
-            // הרשמה דרך פונקציית Netlify
             const response = await fetch('/.netlify/functions/auth', {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -207,7 +180,7 @@ export const Auth = {
 
     // --- Private Helper Methods ---
 
-    _getUsers() {
+    _getUsersLocal() {
         try {
             return JSON.parse(localStorage.getItem('potato_arcade_users') || '{}');
         } catch (e) {
@@ -216,7 +189,7 @@ export const Auth = {
         }
     },
 
-    _saveUsers(users) {
+    _saveUsersLocal(users) {
         try {
             localStorage.setItem('potato_arcade_users', JSON.stringify(users));
         } catch (e) {

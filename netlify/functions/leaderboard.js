@@ -1,6 +1,4 @@
-
-// מפתח ציבורי ייחודי עבור הפרויקט שלך לשמירת הנתונים
-const STORE_URL = "https://kvstore.dev/api/potato_arcade_leaderboard_v1";
+import { getStore } from "@netlify/blobs";
 
 export const handler = async (event, context) => {
   const headers = {
@@ -15,16 +13,7 @@ export const handler = async (event, context) => {
   }
 
   try {
-    // 1. קבלת כל הנתונים השמורים
-    let allData = {};
-    try {
-      const getRes = await fetch(STORE_URL);
-      if (getRes.ok) {
-        allData = await getRes.json();
-      }
-    } catch (e) {
-      console.warn("Database is empty or newly created.");
-    }
+    const store = getStore("potato_arcade_leaderboard");
 
     // קריאת תוצאות (GET)
     if (event.httpMethod === "GET") {
@@ -36,7 +25,7 @@ export const handler = async (event, context) => {
       }
 
       const key = `scores_${gameId}_${difficulty}`;
-      const data = allData[key] || [];
+      const data = await store.get(key, { type: "json" }) || [];
       
       return {
         statusCode: 200,
@@ -55,7 +44,7 @@ export const handler = async (event, context) => {
       }
 
       const key = `scores_${gameId}_${diff}`;
-      const currentScores = allData[key] || [];
+      const currentScores = await store.get(key, { type: "json" }) || [];
 
       // עדכון התוצאה של המשתמש אם היא טובה יותר
       const existingUserIdx = currentScores.findIndex(s => s.userId === username);
@@ -70,19 +59,13 @@ export const handler = async (event, context) => {
       currentScores.sort((a, b) => b.score - a.score);
       
       // שמירה של 10 השיאים הגבוהים בלבד
-      allData[key] = currentScores.slice(0, 10);
-
-      // שמירה חזרה למסד הנתונים
-      await fetch(STORE_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(allData)
-      });
+      const topScores = currentScores.slice(0, 10);
+      await store.set(key, JSON.stringify(topScores));
 
       return {
         statusCode: 200,
         headers,
-        body: JSON.stringify(allData[key])
+        body: JSON.stringify(topScores)
       };
     }
 
