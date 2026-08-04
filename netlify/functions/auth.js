@@ -53,7 +53,7 @@ export default async (req, context) => {
         registeredAt: Date.now()
       };
 
-      await store.set(key, newUser);
+      await store.set(key, JSON.stringify(newUser));
 
       return new Response(JSON.stringify({ username: cleanUsername, role: "player" }), {
         status: 200,

@@ -69,7 +69,7 @@ export default async (req, context) => {
       
       // שמירה של 10 השיאים הגבוהים בלבד
       const topScores = currentScores.slice(0, 10);
-      await store.set(key, topScores);
+      await store.set(key, JSON.stringify(topScores));
 
       return new Response(JSON.stringify(topScores), {
         status: 200,
